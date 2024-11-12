@@ -246,7 +246,7 @@ function generate() {
         let utility = buildUtilityExpression();
         let map = buildMapExpression();
 
-        let base = exclusive + (exclusive.length > 0 ? ' ' : '') + inclusive + (inclusive.length > 0 ? ' ' : '')
+        let base = exclusive + inclusive + (inclusive.trim().endsWith('"') ? '' : ' ')
         let regex = (base + utility + map).trim();
 
         document.getElementById('regex')!.innerText = regex;
@@ -332,9 +332,9 @@ function buildSpecificUtilityExpression(main: string, secondary: string, unique:
     let expression = generateRegularExpression(quantity, (document.getElementById(secondary) as HTMLInputElement).checked, cap);
     if (expression === null) return null;
     if (expression === '') {
-        return `"${unique}" `;
+        return `"${unique}"`;
     } else {
-        return `"${unique}.*${expression}%" `;
+        return `"${unique}.*${expression}%"`;
     }
 }
 
