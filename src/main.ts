@@ -253,8 +253,8 @@ function generate() {
 
         let element = document.getElementById('hint')!;
 
-        element.innerText = regex.length > 0 ? `length: ${regex.length} / 50` : '';
-        element.style.color = (regex.length > 50) ? '#ff4d4d' : '#e0e0e0';
+        element.innerText = regex.length > 0 ? `length: ${regex.length} / 250` : '';
+        element.style.color = (regex.length > 250) ? '#ff4d4d' : '#e0e0e0';
 
         modal('loading-modal', false);
     }, 100);
