@@ -1,4 +1,4 @@
-export function generateRegularExpression(number: string, optimize: boolean, quantity: boolean): string | null {
+export function generateRegularExpression(number: string, optimize: boolean): string | null {
     let input = parseFloat(number);
     // input not a number
     if (isNaN(input)) {
@@ -6,7 +6,13 @@ export function generateRegularExpression(number: string, optimize: boolean, qua
     }
     // if input is 0 before optimization ignore
     if (input === 0) return null;
-    if (optimize) input = Math.floor(input / 10) * 10;
+    if (optimize) {
+        if (input >= 100) {
+            input = input - (input % 10);
+        } else {
+            input = Math.floor(input / 10) * 10;
+        }
+    }
     // zero does not have to be optimized
     if (input === 0) {
         return "";
@@ -14,37 +20,51 @@ export function generateRegularExpression(number: string, optimize: boolean, qua
 
     // anything past this point requires a regex
 
+    let hundreds = Math.floor(input / 100) % 10;
     let tens = Math.floor((input % 100) / 10);
     let digit = input % 10;
 
-    if (input >= 200) {
-        // actual regex to capture 200 and higher would be '[2-9]\d{2}'
-        return "2..";
-    } else if (input === 199) {
-        return "199";
+    let expression = generate(number, input, hundreds, tens, digit);
+
+    return input >= 100 && tens != 0 ? expression + `|[${hundreds + 1}-9]..` : expression;
+}
+
+function generate(number: string, input: number, hundreds: number, tens: number, digit: number): string | null {
+    if (input === 100) {
+        return "\\d.."
     } else if (input > 100) {
-        if (digit == 0) {
-            return `1[${tens}-9].`;
+        if (digit === 0 && tens === 0) {
+            return `[${hundreds}-9]..`
+        } else if (digit == 0) {
+            if (tens === 9) {
+                return `${hundreds}9.`;
+            } else if (tens === 8) {
+                return `${hundreds}[89].`;
+            }
+            return `${hundreds}[${tens}-9].`;
         } else if (tens === 0) {
-            return `(\\d0[${digit}-9]|\\d[1-9].)`
+            if (digit === 9) {
+                return `(${hundreds}09|${hundreds}[1-9].)`
+            } else if (digit === 8) {
+                return `(${hundreds}0[89]|${hundreds}[1-9].)`
+            }
+            return `(${hundreds}0[${digit}-9]|${hundreds}[1-9].)`
         } else {
             if (tens === 9) {
-                return digit != 8 ? `19[${tens}-9]` : "19[89]";
+                return digit != 8 ? `${hundreds}9[${tens}-9]` : `${hundreds}9[89]`;
             }
             // these won't match above 200, if we want a true match we would have to replace the start with \d
-            return `1([${tens}-9][${digit}-9]|[${tens + 1}-9].)`;
+            return `${hundreds}([${tens}-9][${digit}-9]|[${tens + 1}-9].)`;
         }
-    } else if (input === 100) {
-        return "\\d{3}"
     } else if (input >= 10) {
         if (digit === 0) {
             let base: string;
             if (tens === 9) base = "9.";
             else if (tens === 8) base = "[89].";
             else base = `[${tens}-9].`;
-            return quantity ? `(${base}|1..)` : base;
+            return `(${base}|\\d..)`;
         } else if (tens === 9) {
-            return quantity ? `(${tens}[${digit}-9]|1..)` : `(${tens}[${digit}-9])`;
+            return `(${tens}[${digit}-9]|\\d..)`;
         } else {
             let optimized: string[] = [];
             if (digit === 9) optimized.push("9");
@@ -54,8 +74,7 @@ export function generateRegularExpression(number: string, optimize: boolean, qua
             if (tens === 8) optimized.push("9.");
             if (tens === 7) optimized.push("[89].");
             else optimized.push(`[${tens + 1}-9].`)
-
-            return quantity ? `(${tens}${optimized[0]}|${optimized[1]}|1..)` : `(${tens}${optimized[0]}|${optimized[1]})`;
+            return `(${tens}${optimized[0]}|${optimized[1]}|\\d..)`;
         }
     } else if (input < 10) {
         if (input === 9) return "(9|\\d..?)"

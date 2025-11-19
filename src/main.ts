@@ -101,6 +101,88 @@ function build(config: string) {
             }
         }
     }
+    rebuild();
+}
+
+function rebuild() {
+    const t17Element = document.getElementById('t17') as HTMLInputElement;
+    const t17Stored = localStorage.getItem("t17");
+    if (t17Stored) t17Element.checked = t17Stored === "true";
+    toggle("t17", t17Element.checked);
+
+    const vaalElement = document.getElementById('vaal') as HTMLInputElement;
+    const vaalStored = localStorage.getItem("vaal");
+    if (vaalStored) vaalElement.checked = vaalStored === "true";
+    toggle("vaal", vaalElement.checked);
+
+    const typeStored = localStorage.getItem('maps-include');
+    const type: ModifierType = Number(typeStored ?? 0) as ModifierType;
+    (document.getElementById('maps-include') as HTMLInputElement).checked = type === ModifierType.INCLUSIVE;
+    (document.getElementById('maps-exclude') as HTMLInputElement).checked = type !== ModifierType.INCLUSIVE;
+
+    let mapNormalStored = localStorage.getItem('map-normal');
+    if (mapNormalStored) (document.getElementById('map-normal') as HTMLInputElement)!.checked = mapNormalStored === "true";
+    let mapRareStored = localStorage.getItem('map-rare');
+    if (mapRareStored) (document.getElementById('map-rare') as HTMLInputElement)!.checked = mapRareStored === "true";
+    let mapMagicStored = localStorage.getItem('map-magic');
+    if (mapMagicStored) (document.getElementById('map-magic') as HTMLInputElement)!.checked = mapMagicStored === "true";
+
+    const regex = localStorage.getItem("regex");
+    if (regex) {
+        document.getElementById('regex')!.innerText = regex;
+        const args = regex.match(/"([^"]*)"|(\S+)/g)?.map(s => {
+            return s.startsWith('"') && s.endsWith('"') ? s.slice(1, -1) : s;
+        }) ?? [];
+        args.forEach(arg => {
+            const containerId = arg.indexOf('!', 0) !== -1 ? 'exclusive' : 'inclusive';
+            const container = (document.getElementById(containerId) as HTMLElement)?.querySelector('.mod-container');
+
+            if (container) {
+                const children = container.children;
+                const pattern = arg.replace('!', '');
+                const regex = new RegExp(pattern, 'i');
+
+                for (let i = 0; i < children.length; i++) {
+                    const child = children[i] as HTMLElement;
+                    if (child.dataset.t17 === 'true' && t17Stored === 'false') continue;
+                    if (child.dataset.vaal === 'true' && vaalStored === 'false') continue;
+                    if (child.classList.contains('disabled-item')) continue;
+                    if (child.textContent && regex.test(child.textContent)) {
+                        let modIndex = Number(child.dataset.mod);
+                        const modifier = modifiers.find(m => m.getIndex() === modIndex);
+                        if (!modifier) continue;
+                        child.classList.toggle('selected-item');
+                        const active = child.classList.contains('selected-item');
+                        const type = containerId === 'exclusive' ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE;
+                        const array = type === ModifierType.EXCLUSIVE ? exclusive : inclusive;
+                        disableCounterpartContainer(i, active, type, modifier);
+                        handleModifierSelection(active, array, modifier);
+                        toggleChildContainer(i, active);
+                    }
+                }
+            }
+        });
+    }
+
+    let mapCorruptedStored = localStorage.getItem('corrupted');
+    if (mapCorruptedStored) {
+        let mapCorruptedElement = (document.getElementById(mapCorruptedStored) as HTMLInputElement)!
+        mapCorruptedElement.checked = true
+        handleCheckboxChange(mapCorruptedElement);
+    }
+
+    rebuildUtilitySection('quantity', 'optimize-quantity');
+    rebuildUtilitySection('pack-size', 'optimize-pack');
+    rebuildUtilitySection('scarabs', 'optimize-scarab');
+    rebuildUtilitySection('maps', 'optimize-maps');
+    rebuildUtilitySection('currency', 'optimize-currency');
+    rebuildUtilitySection('rarity', 'optimize-rarity');
+
+    function rebuildUtilitySection(main: string, secondary: string) {
+        (document.getElementById(main) as HTMLInputElement).value = localStorage.getItem(main) ?? "";
+        let stored = localStorage.getItem(secondary);
+        (document.getElementById(secondary) as HTMLInputElement).checked = stored === null || stored === "true";
+    }
 }
 
 function createSelectableContainer(index: number, type: ModifierType, modifier: Modifier): HTMLDivElement {
@@ -117,9 +199,12 @@ function createSelectableContainer(index: number, type: ModifierType, modifier: 
         div.style.display = "none";
     }
 
+    let fallback = modifier.getFallback();
     div.dataset.mod = index.toString();
     div.dataset.t17 = modifier.isT17().toString();
     div.dataset.vaal = modifier.isVaal().toString();
+    div.dataset.special = modifier.isSpecial().toString();
+    div.dataset.fallback = fallback == null ? '' : fallback;
     div.textContent = modifier.getModifier().replace(/\\n/g, "\n");
     div.addEventListener('click', (event) => {
         let element = (event.target as HTMLElement);
@@ -241,15 +326,22 @@ function generate() {
     setTimeout(() => {
         let any = (document.getElementById('any')! as HTMLInputElement).checked;
 
+        localStorage.setItem("any", String(any));
+
         let exclusive = buildModifierExpression(true, ModifierType.EXCLUSIVE);
         let inclusive = buildModifierExpression(any, ModifierType.INCLUSIVE);
         let utility = buildUtilityExpression();
         let map = buildMapExpression();
 
-        let base = exclusive + inclusive + (inclusive.trim().endsWith('"') ? '' : ' ')
+        let base = exclusive + ' ' + inclusive;
+
+        base = base + (inclusive.trim().endsWith('"') ? '' : ' ')
+
         let regex = (base + utility + map).trim();
 
         document.getElementById('regex')!.innerText = regex;
+
+        localStorage.setItem("regex", regex);
 
         let element = document.getElementById('hint')!;
 
@@ -291,6 +383,10 @@ function buildSuitableExcludeList(type: ModifierType): Blacklist {
 function buildModifierExpression(any: boolean, type: ModifierType): string {
     const t17 = document.getElementById('t17') as HTMLInputElement;
     const vaal = document.getElementById('vaal') as HTMLInputElement;
+
+    localStorage.setItem("t17", t17.checked.toString());
+    localStorage.setItem("vaal", vaal.checked.toString());
+
     let excludes = buildSuitableExcludeList(type);
     let filter = any ?
         new FilterModifierAny(t17.checked, vaal.checked, modifiers, excludes, blacklist) :
@@ -327,9 +423,14 @@ function buildModifierExpression(any: boolean, type: ModifierType): string {
     return regex;
 }
 
-function buildSpecificUtilityExpression(main: string, secondary: string, unique: string, cap: boolean) {
+function buildSpecificUtilityExpression(main: string, secondary: string, unique: string) {
     let quantity = (document.getElementById(main) as HTMLInputElement).value;
-    let expression = generateRegularExpression(quantity, (document.getElementById(secondary) as HTMLInputElement).checked, cap);
+    let optimize = (document.getElementById(secondary) as HTMLInputElement).checked;
+
+    localStorage.setItem(main, quantity.toString());
+    localStorage.setItem(secondary, String(optimize));
+
+    let expression = generateRegularExpression(quantity, optimize);
     if (expression === null) return null;
     if (expression === '') {
         return `"${unique}"`;
@@ -339,12 +440,12 @@ function buildSpecificUtilityExpression(main: string, secondary: string, unique:
 }
 
 function buildUtilityExpression(): string {
-    let e1 = buildSpecificUtilityExpression('quantity', 'optimize-quantity', 'm q', true);
-    let e2 = buildSpecificUtilityExpression('pack-size', 'optimize-pack', 'iz', true);
-    let e3 = buildSpecificUtilityExpression('scarabs', 'optimize-scarab', 'abs', true);
-    let e4 = buildSpecificUtilityExpression('maps', 'optimize-maps', 'ps:', true);
-    let e5 = buildSpecificUtilityExpression('currency', 'optimize-currency', 'urr', true);
-    let e6 = buildSpecificUtilityExpression('rarity', 'optimize-rarity', 'm r.*y', true);
+    let e1 = buildSpecificUtilityExpression('quantity', 'optimize-quantity', 'm q');
+    let e2 = buildSpecificUtilityExpression('pack-size', 'optimize-pack', 'iz');
+    let e3 = buildSpecificUtilityExpression('scarabs', 'optimize-scarab', 'abs');
+    let e4 = buildSpecificUtilityExpression('maps', 'optimize-maps', 'ps:');
+    let e5 = buildSpecificUtilityExpression('currency', 'optimize-currency', 'urr');
+    let e6 = buildSpecificUtilityExpression('rarity', 'optimize-rarity', 'm r.*y');
 
     let expression = "";
 
@@ -367,10 +468,21 @@ function buildMapExpression(): string {
         ModifierType.INCLUSIVE :
         ModifierType.EXCLUSIVE;
 
+    localStorage.setItem('maps-include', type.toString());
+
     let maps: string[] = [];
-    if ((document.getElementById('map-normal') as HTMLInputElement)!.checked) maps.push("n");
-    if ((document.getElementById('map-rare') as HTMLInputElement)!.checked) maps.push("r");
-    if ((document.getElementById('map-magic') as HTMLInputElement)!.checked) maps.push("m");
+
+    let normal = (document.getElementById('map-normal') as HTMLInputElement)!.checked;
+    localStorage.setItem('map-normal', String(normal));
+    if (normal) maps.push("n");
+
+    let rare = (document.getElementById('map-rare') as HTMLInputElement)!.checked;
+    localStorage.setItem('map-rare', String(rare));
+    if (rare) maps.push("r");
+
+    let magic = (document.getElementById('map-magic') as HTMLInputElement)!.checked;
+    localStorage.setItem('map-magic', String(magic));
+    if (magic) maps.push("m");
 
     let inclusive = type == ModifierType.INCLUSIVE && maps.length != 3 && maps.length != 0;
     let exclusive = type == ModifierType.EXCLUSIVE && maps.length != 0;
@@ -391,15 +503,19 @@ function mapExpressionHelper(maps: string[]): string {
 function handleAttribute(attribute: string) {
     document.getElementById(attribute)!.addEventListener('change', (event: Event) => {
         const target = event.target as HTMLInputElement;
-        const elements = document.querySelectorAll('[data-' + attribute + '="true"]');
-        elements.forEach((e) => {
-            let element = (e as HTMLElement);
-            element.style.display = target.checked ? 'block' : 'none';
-            if (!target.checked) element.classList.remove("selected-item");
-        });
-        document.querySelectorAll('.container-search').forEach(element => {
-            filter(element as HTMLElement);
-        });
+        toggle(attribute, target.checked);
+    });
+}
+
+function toggle(attribute: string, selected: boolean) {
+    const elements = document.querySelectorAll('[data-' + attribute + '="true"]');
+    elements.forEach((e) => {
+        let element = (e as HTMLElement);
+        element.style.display = selected ? 'block' : 'none';
+        if (!selected) element.classList.remove("selected-item");
+    });
+    document.querySelectorAll('.container-search').forEach(element => {
+        filter(element as HTMLElement);
     });
 }
 
@@ -498,6 +614,11 @@ function setup() {
         wipe();
     });
 
+    document.getElementById('reset')!.addEventListener('click', () => {
+        localStorage.clear();
+        window.location.reload();
+    });
+
     // thanks to Ycrew for this little snippet
     document.getElementById('copy')!.addEventListener('click', () => {
         let copyText: string = document.getElementById('regex')!.innerText;
@@ -518,11 +639,11 @@ function setup() {
     });
 
     document.getElementById('report')!.addEventListener('click', () => {
-        window.open('https://github.com/n1klas4008/poe-regex/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=', '_blank');
+        window.open('https://github.com/hawolt/poe-regex/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=', '_blank');
     });
 
     document.getElementById('suggest')!.addEventListener('click', () => {
-        window.open('https://github.com/n1klas4008/poe-regex/issues/new?assignees=&labels=enhancement&projects=&template=feature_request.md&title=', '_blank');
+        window.open('https://github.com/hawolt/poe-regex/issues/new?assignees=&labels=enhancement&projects=&template=feature_request.md&title=', '_blank');
     });
 
     document.querySelectorAll('.close-modal').forEach(element => {
@@ -562,6 +683,8 @@ function setup() {
             let target = event.target as HTMLElement;
             let type: ModifierType | null = null;
 
+            localStorage.setItem("corrupted", target.id);
+
             switch (target.id) {
                 case 'corrupted-include':
                     type = ModifierType.INCLUSIVE;
@@ -597,33 +720,35 @@ function setup() {
         });
     });
 
-    function handleCheckboxChange(checkbox: HTMLInputElement): void {
-        const classes = checkbox.classList;
-        let group = "";
+}
 
-        for (const klass of classes) {
-            if (klass.includes("btn-group-")) {
-                group = klass;
-                break;
-            }
+function handleCheckboxChange(checkbox: HTMLInputElement): void {
+    const checkboxes = document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    const classes = checkbox.classList;
+    let group = "";
+
+    for (const klass of classes) {
+        if (klass.includes("btn-group-")) {
+            group = klass;
+            break;
         }
+    }
 
-        if (group.length == 0) return;
+    if (group.length == 0) return;
 
-        if (checkbox.checked) {
-            checkboxes.forEach(box => {
-                if (box.classList.contains(group) && box !== checkbox) {
-                    box.checked = false;
-                }
-            });
-        } else {
-            const groups = Array.from(checkboxes).filter(box =>
-                box.classList.contains(group)
-            );
-            const checked = groups.some(box => box.checked);
-            if (!checked) {
-                checkbox.checked = true;
+    if (checkbox.checked) {
+        checkboxes.forEach(box => {
+            if (box.classList.contains(group) && box !== checkbox) {
+                box.checked = false;
             }
+        });
+    } else {
+        const groups = Array.from(checkboxes).filter(box =>
+            box.classList.contains(group)
+        );
+        const checked = groups.some(box => box.checked);
+        if (!checked) {
+            checkbox.checked = true;
         }
     }
 }

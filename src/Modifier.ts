@@ -5,6 +5,7 @@ export class Modifier {
     private readonly active: boolean;
     private readonly t17: boolean = false;
     private readonly vaal: boolean = false;
+    private readonly special: boolean = false;
     private readonly fallback: string | null = null;
     private readonly bypass: Set<number> = new Set();
 
@@ -18,6 +19,7 @@ export class Modifier {
                 arg.split("=", 2)[1].split(",").map(o => Number(o)).forEach(value => this.bypass.add(value));
             } else if (arg.startsWith('fallback')) {
                 this.fallback = arg.split("=", 2)[1];
+                this.special = true;
             } else {
                 switch (arg) {
                     case 't17':
@@ -55,6 +57,10 @@ export class Modifier {
         return this.active;
     }
 
+    public isSpecial(): boolean {
+        return this.special;
+    }
+
     public isVaal(): boolean {
         return this.vaal;
     }
@@ -73,6 +79,7 @@ export class Modifier {
         return this.fallback === modifier.getFallback() &&
             this.mod === modifier.getModifier() &&
             this.active === modifier.isActive() &&
+            this.special === modifier.isSpecial() &&
             this.index === modifier.getIndex() &&
             this.vaal === modifier.isVaal() &&
             this.t17 === modifier.isT17();
