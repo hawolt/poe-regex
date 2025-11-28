@@ -26,7 +26,9 @@ export function generateRegularExpression(number: string, optimize: boolean): st
 
     let expression = generate(number, input, hundreds, tens, digit);
 
-    return input >= 100 && tens != 0 ? expression + `|[${hundreds + 1}-9]..` : expression;
+    console.log(expression);
+
+    return input >= 100 && tens != 0 ? '(' + expression + `|[${hundreds + 1}-9]..)` : expression;
 }
 
 function generate(number: string, input: number, hundreds: number, tens: number, digit: number): string | null {
