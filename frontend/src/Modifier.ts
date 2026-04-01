@@ -1,44 +1,37 @@
 export class Modifier {
     private readonly mod: string;
     private readonly index: number;
-    private readonly args: string[];
+    private readonly groups: string[];
     private readonly active: boolean;
-    private readonly t17: boolean = false;
-    private readonly vaal: boolean = false;
-    private readonly special: boolean = false;
-    private readonly fallback: string | null = null;
-    private readonly bypass: Set<number> = new Set();
+    private readonly t17: boolean;
+    private readonly vaal: boolean;
+    private readonly implicit: boolean;
+    private readonly special: boolean;
+    private readonly fallback: string | null;
 
-    constructor(mod: string, args: string[]) {
+    constructor(
+        mod: string,
+        index: number,
+        groups: string[],
+        active: boolean,
+        t17: boolean,
+        vaal: boolean,
+        implicit: boolean = false,
+        fallback: string | null = null
+    ) {
         this.mod = mod;
-        this.args = args;
-        this.index = Number(args[0]);
-        this.active = Boolean(args[1]);
-        for (const arg of args) {
-            if (arg.startsWith('bypass')) {
-                arg.split("=", 2)[1].split(",").map(o => Number(o)).forEach(value => this.bypass.add(value));
-            } else if (arg.startsWith('fallback')) {
-                this.fallback = arg.split("=", 2)[1];
-                this.special = true;
-            } else {
-                switch (arg) {
-                    case 't17':
-                        this.t17 = true;
-                        break
-                    case 'vaal':
-                        this.vaal = true;
-                        break
-                }
-            }
-        }
+        this.index = index;
+        this.groups = groups;
+        this.active = active;
+        this.t17 = t17;
+        this.vaal = vaal;
+        this.implicit = implicit;
+        this.fallback = fallback;
+        this.special = fallback !== null;
     }
 
-    public isIncludedBypass(id: number): boolean {
-        return this.bypass.has(id);
-    }
-
-    public getMetadata(): string[] {
-        return [...this.args];
+    public getGroups(): string[] {
+        return this.groups;
     }
 
     public getFallback(): string | null {
@@ -69,19 +62,23 @@ export class Modifier {
         return this.t17;
     }
 
+    public isImplicit(): boolean {
+        return this.implicit;
+    }
+
+    public clone(): Modifier {
+        return new Modifier(this.mod, this.index, this.groups, this.active, this.t17, this.vaal, this.implicit, this.fallback);
+    }
+
     public equals(modifier: Modifier): boolean {
-        if (this === modifier) {
-            return true;
-        }
-        if (!modifier) {
-            return false;
-        }
-        return this.fallback === modifier.getFallback() &&
-            this.mod === modifier.getModifier() &&
-            this.active === modifier.isActive() &&
-            this.special === modifier.isSpecial() &&
-            this.index === modifier.getIndex() &&
-            this.vaal === modifier.isVaal() &&
-            this.t17 === modifier.isT17();
+        if (this === modifier) return true;
+        if (!modifier) return false;
+        return this.mod === modifier.getModifier()
+            && this.index === modifier.getIndex()
+            && this.active === modifier.isActive()
+            && this.t17 === modifier.isT17()
+            && this.vaal === modifier.isVaal()
+            && this.implicit === modifier.isImplicit()
+            && this.fallback === modifier.getFallback();
     }
 }

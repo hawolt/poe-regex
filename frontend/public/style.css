@@ -59,17 +59,12 @@ a {
 }
 
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 body.no-scroll {
-    /*position: fixed; disable this for now to prevent the site from jumping all the way to the top*/
-    /*overflow-y: scroll;*/
+    /* overflow-y: scroll; */
 }
 
 #wrapper {
@@ -228,6 +223,8 @@ body.no-scroll {
     gap: 3px;
 }
 
+/* ── Tier colour coding ───────────────────────────────────────────────────── */
+
 .selectable {
     white-space: break-spaces;
     background: #2C2C2C;
@@ -235,13 +232,22 @@ body.no-scroll {
     padding: 5px;
 }
 
+/* Map implicits — soft gold tint */
+.implicit {
+    background: rgba(120, 100, 30, 0.35);
+}
+
+/* Vaal implicits — soft red */
 .vaal {
     background: rgba(108, 35, 35, 0.3);
 }
 
+/* T17 mods — muted purple */
 .t17 {
     background: #453d57;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
 
 .selectable:hover {
     background: #404040;
@@ -322,4 +328,9 @@ body.no-scroll {
 
 .hidden {
     display: none;
+}
+
+.regex-hint {
+    font-size: 14px;
+    color: #e0e0e0;
 }
