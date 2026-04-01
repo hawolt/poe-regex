@@ -5,25 +5,17 @@ import {MapAssociation} from "./MapAssociation";
 export class FilterModifierAll extends Filter {
 
     protected check(substring: string, modifiers: Modifier[], result: Set<string>): boolean {
-        // if the substring is excluded, instantly stop
         if (this.excludes.blacklisted(substring)) {
             return false;
         }
 
-        // check if any other mod has issues with this substring
         for (let i = 0; i < this.modifiers.length; i++) {
-            let modifier = this.modifiers[i];
-            let valid = modifier.getModifier().toLowerCase().includes(substring.toLowerCase());
-            let required = this.includes(modifier, modifiers);
-            // is this perhaps a T17 mod that we can ignore
-            if (modifier.isT17() && !this.t17) {
-                continue;
-            }
-            // is this perhaps a vaal implicit mod that we can ignore
-            if (modifier.isVaal() && !this.vaal) {
-                continue;
-            }
-            // if we do not need this mod, but it includes our substring reject it
+            const modifier = this.modifiers[i];
+            if (this.isIgnored(modifier)) continue;
+
+            const valid    = modifier.getModifier().toLowerCase().includes(substring.toLowerCase());
+            const required = this.includes(modifier, modifiers);
+
             if ((!required && valid) || (required && !valid)) {
                 return false;
             }
@@ -31,67 +23,83 @@ export class FilterModifierAll extends Filter {
         return true;
     }
 
-    create(association: MapAssociation, result: Set<string>, required: Modifier[], failsafe: number): void {
-        // stop if we don't require anything
-        if (required.length === 0) return;
+    public create(association: MapAssociation, result: Set<string>, required: Modifier[], failsafe: number): void {
+        if (required.length === 0) {
+            console.log(`[All.create] required empty, done`);
+            return;
+        }
+
+        console.log(`[All.create] called with ${required.length} required mod(s):`);
+        required.forEach((m, i) => console.log(`  req[${i}]: idx=${m.getIndex()} t17=${m.isT17()} vaal=${m.isVaal()} impl=${m.isImplicit()} "${m.getModifier().substring(0, 70)}"`));
 
         for (const modifier of required) {
+            console.log(`\n[All.create] ── processing: "${modifier.getModifier().substring(0, 70)}" ──`);
+
             let options: Set<string> = new Set();
             let exception: Modifier[] = [];
 
-            let list = this.substrings(modifier, this.blacklist);
+            const list = this.substrings(modifier, this.blacklist);
             list.forEach(item => options.add(item));
+            console.log(`[All.create]   substrings: ${options.size}`);
 
-            // figure out any mod that contains our target mod as a reference for later
+            // build exception list: mods that textually contain or are contained by this modifier
             for (const i in this.modifiers) {
-                let mod = this.modifiers[i];
-                let direct = modifier.getModifier().toLowerCase().includes(mod.getModifier().toLowerCase());
-                let reversed = mod.getModifier().toLowerCase().includes(modifier.getModifier().toLowerCase());
-                if (direct || reversed) {
-                    exception.push(mod);
-                }
+                const mod      = this.modifiers[i];
+                const direct   = modifier.getModifier().toLowerCase().includes(mod.getModifier().toLowerCase());
+                const reversed = mod.getModifier().toLowerCase().includes(modifier.getModifier().toLowerCase());
+                if (direct || reversed) exception.push(mod);
             }
             exception.push(modifier);
+            console.log(`[All.create]   exception list: ${exception.length} mods`);
 
-            // sort all substrings based on their length
             let matches: string[] = [];
-            let sorted = Array.from(options).sort((a, b) => a.length - b.length);
+            let checked = 0;
+            const sorted = Array.from(options).sort((a, b) => a.length - b.length);
+
             for (const substring of sorted) {
-                // ensure substring does not start or end with a space
                 if (substring.startsWith(' ') || substring.endsWith(' ')) continue;
-                // ensure substring is unique to itself and no other mod other than the exceptions
+                checked++;
                 if (!this.check(substring, exception, result)) continue;
                 matches.push(substring);
             }
 
-            // sort all matches based on their real length
-            // sort equal length results based on if they contain a space or not
+            console.log(`[All.create]   checked ${checked} substrings → ${matches.length} valid matches`);
+
+            if (matches.length === 0) {
+                console.warn(`[All.create]   NO matches found for "${modifier.getModifier().substring(0, 60)}"`);
+                console.warn(`[All.create]   fallback="${modifier.getFallback()}"`);
+                console.warn(`[All.create]   t17=${this.t17} vaal=${this.vaal} impl=${this.implicit}`);
+                console.warn(`[All.create]   modifiers pool size=${this.modifiers.length}`);
+            }
+
+            // sort by effective length (penalise # and spaces)
             matches.sort((a, b) => {
-                let length1 = a.length;
-                let length2 = b.length;
-
-                length1 += a.includes("#") ? 3 : 0;
-                length2 += b.includes("#") ? 3 : 0;
-
-                length1 += a.includes(" ") ? 2 : 0;
-                length2 += b.includes(" ") ? 2 : 0;
-
-                if (length1 !== length2) {
-                    return length1 - length2;
-                }
-                const space1 = a.includes(" ");
-                const space2 = b.includes(" ");
-                return space1 === space2 ? 0 : space1 ? 1 : -1;
+                let la = a.length + (a.includes('#') ? 3 : 0) + (a.includes(' ') ? 2 : 0);
+                let lb = b.length + (b.includes('#') ? 3 : 0) + (b.includes(' ') ? 2 : 0);
+                if (la !== lb) return la - lb;
+                return (a.includes(' ') ? 1 : 0) - (b.includes(' ') ? 1 : 0);
             });
 
-            let fallback = modifier.getFallback();
+            const fallback = modifier.getFallback();
+
             if (matches.length > 0) {
-                let optimized = this.optimize(matches[0], required);
-                let ideal = optimized.getIdealResult();
-                result.add(ideal)
+                console.log(`[All.create]   top match: "${matches[0]}"`);
+                try {
+                    const optimized = this.optimize(matches[0], required);
+                    const ideal     = optimized.getIdealResult();
+                    console.log(`[All.create]   → result: "${ideal}"`);
+                    result.add(ideal);
+                } catch (e) {
+                    console.error(`[All.create]   optimize() THREW:`, e);
+                }
             } else if (fallback) {
+                console.warn(`[All.create]   using fallback: "${fallback}"`);
                 result.add(fallback);
+            } else {
+                console.error(`[All.create]   FAILED — no match and no fallback for: "${modifier.getModifier().substring(0, 60)}"`);
             }
         }
+
+        console.log(`[All.create] done. result:`, Array.from(result));
     }
 }
