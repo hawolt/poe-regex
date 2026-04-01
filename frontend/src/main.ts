@@ -13,22 +13,18 @@ const REGULAR_KEYS   = ["default", "low_tier_map", "mid_tier_map", "top_tier_map
 const TIER_KEY_ORDER = ["implicit", ...REGULAR_KEYS, "uber_tier_map"] as const;
 
 let selection: Map<ModifierType, Modifier[]> = new Map();
-let cache: Map<ModifierType, string> = new Map();
-let blacklist = new Blacklist();
+let cache:     Map<ModifierType, string>     = new Map();
+let blacklist  = new Blacklist();
 let modifiers: Modifier[] = [];
 let exclusive: Modifier[] = [];
 let inclusive: Modifier[] = [];
 
-// Substrings from map.affix.blacklist.config — mod entries whose text contains
-// any of these are hidden from the UI panels entirely (not added to the DOM).
-let userHideSet: Set<string> = new Set();
+// Built once in buildModifiers for O(1) group-member lookup in toggleGroupMembers.
+let assocMap: Map<number, number[]> = new Map();
 
-// Weight map from map.weight.config — substring → weight.
-// Higher weight = closer to top of the mod list. Mods with no match get 0.
-let userWeightMap: Map<string, number> = new Map();
-
-// The name of the currently active profile. Always has a value — defaults to "default".
-let activeProfile: string = "default";
+let userHideSet:   Set<string>           = new Set();
+let userWeightMap: Map<string, number>   = new Map();
+let activeProfile: string                = "default";
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 
@@ -40,30 +36,18 @@ document.addEventListener('DOMContentLoaded', () => {
         "./data/map.blacklist.config"
     ];
 
-    // map.affix.blacklist.config is optional — silently ignore 404 so the page
-    // still loads when the file is absent or empty.
-    const userAffixP = fetch("./data/map.affix.blacklist.config")
-        .then(r => r.ok ? r.text() : "")
-        .catch(() => "");
-
-    // map.weight.config is optional — silently ignore 404.
-    const userWeightP = fetch("./data/map.weight.config")
-        .then(r => r.ok ? r.text() : "")
-        .catch(() => "");
+    const userAffixP  = fetch("./data/map.affix.blacklist.config").then(r => r.ok ? r.text() : "").catch(() => "");
+    const userWeightP = fetch("./data/map.weight.config").then(r => r.ok ? r.text() : "").catch(() => "");
 
     Promise.all([readText(blacklistFiles), userAffixP, userWeightP])
         .then(([responses, userAffix, userWeight]) => {
             blacklist = initBlacklist(responses);
-            // Build the UI-hide set from the user affix blacklist file.
+
             userHideSet = new Set(
-                userAffix.split("\n")
-                    .map(l => l.trim().toLowerCase())
-                    .filter(l => l.length > 0 && !l.startsWith('#'))
+                userAffix.split("\n").map(l => l.trim().toLowerCase()).filter(l => l && !l.startsWith('#'))
             );
-            if (userHideSet.size > 0) {
-                console.log(`[user-affix] hiding ${userHideSet.size} mod pattern(s):`, [...userHideSet]);
-            }
-            // Parse weight config: "modTextSubstring=weight" per line.
+            if (userHideSet.size > 0) console.log(`[user-affix] hiding ${userHideSet.size} pattern(s)`);
+
             userWeightMap = new Map();
             for (const raw of userWeight.split("\n")) {
                 const line = raw.trim();
@@ -72,13 +56,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (eq === -1) continue;
                 const key = line.substring(0, eq).trim().toLowerCase();
                 const val = parseInt(line.substring(eq + 1).trim(), 10);
-                if (key.length > 0 && !isNaN(val)) {
-                    userWeightMap.set(key, val);
-                }
+                if (key && !isNaN(val)) userWeightMap.set(key, val);
             }
-            if (userWeightMap.size > 0) {
-                console.log(`[user-weight] loaded ${userWeightMap.size} weight rule(s)`);
-            }
+            if (userWeightMap.size > 0) console.log(`[user-weight] loaded ${userWeightMap.size} rule(s)`);
         })
         .then(() => loadModifiers())
         .then(() => setup())
@@ -90,19 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadModifiers(): Promise<void> {
     const [modJson, fallbackText] = await Promise.all([
-        fetch("./data/map.mod.config.json").then(r => {
-            if (!r.ok) throw new Error(`Failed to load map.mod.config.json: ${r.status}`);
-            return r.json();
-        }),
-        fetch("./data/map.fallback.config").then(r => {
-            if (!r.ok) throw new Error(`Failed to load map.fallback.config: ${r.status}`);
-            return r.text();
-        }),
+        fetch("./data/map.mod.config.json").then(r => { if (!r.ok) throw new Error(`Failed: ${r.status}`); return r.json(); }),
+        fetch("./data/map.fallback.config").then(r => { if (!r.ok) throw new Error(`Failed: ${r.status}`); return r.text(); }),
     ]);
 
-    // Parse fallback config: "modText=fallbackString" per line, # lines are comments.
-    // For multiline mod texts, use literal \n in the key, e.g.:
-    //   Monsters cannot be Stunned\n(#-#)% more Monster Life=Stunned
     const fallbacks = new Map<string, string>();
     for (const raw of fallbackText.split("\n")) {
         const line = raw.trim();
@@ -111,22 +82,15 @@ async function loadModifiers(): Promise<void> {
         if (eq === -1) continue;
         const key = line.substring(0, eq).trim();
         const fb  = line.substring(eq + 1).trim();
-        if (key.length > 0 && fb.length > 0) {
-            fallbacks.set(key, fb);
-            console.log(`[fallback] "${key}" → "${fb}"`);
-        }
+        if (key && fb) { fallbacks.set(key, fb); console.log(`[fallback] "${key}" → "${fb}"`); }
     }
-    console.log(`[fallback] loaded ${fallbacks.size} manual fallback(s)`);
-
+    console.log(`[fallback] loaded ${fallbacks.size} fallback(s)`);
     buildModifiers(modJson, fallbacks);
 }
 
 async function readText(urls: string[]): Promise<string[]> {
     return Promise.all(urls.map(url =>
-        fetch(url).then(r => {
-            if (!r.ok) throw new Error(`Failed to load ${url}: ${r.status}`);
-            return r.text();
-        })
+        fetch(url).then(r => { if (!r.ok) throw new Error(`Failed to load ${url}: ${r.status}`); return r.text(); })
     ));
 }
 
@@ -140,28 +104,20 @@ function initBlacklist(files: string[]): Blacklist {
 // ─── Build ────────────────────────────────────────────────────────────────────
 
 function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, string>): void {
-    interface FlatEntry {
-        text: string;
-        groups: string[];
-        t17: boolean;
-        vaal: boolean;
-        implicit: boolean;
-    }
+    interface FlatEntry { text: string; groups: string[]; t17: boolean; vaal: boolean; implicit: boolean; }
 
-    const flatEntries: FlatEntry[] = [];
-    const regularTexts  = new Set<string>();
-    const implicitTexts = new Set<string>();
+    const flatEntries:   FlatEntry[] = [];
+    const regularTexts   = new Set<string>();
+    const implicitTexts  = new Set<string>();
 
     for (const key of TIER_KEY_ORDER) {
         const section: any[] = config[key] ?? [];
         const isT17      = key === "uber_tier_map";
         const isImplicit = key === "implicit";
-
         for (const entry of section) {
             const text: string = (entry.text ?? "").trim().replace(/\n/g, '\\n');
             if (!text) continue;
             const isVaal = entry.generation_type === "corrupted";
-
             if (isT17) {
                 if (regularTexts.has(text)) continue;
             } else if (isImplicit) {
@@ -171,27 +127,17 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
                 if (regularTexts.has(text)) continue;
                 regularTexts.add(text);
             }
-
             flatEntries.push({ text, groups: Array.isArray(entry.groups) ? entry.groups : [], t17: isT17, vaal: isVaal, implicit: isImplicit });
         }
     }
 
-    // Remove any entries whose text matches a substring in the user hide set.
-    // This is what actually hides mods from the UI panels.
-    const visibleEntries = userHideSet.size === 0
-        ? flatEntries
-        : flatEntries.filter(e => {
-            const lower = e.text.toLowerCase();
-            for (const pattern of userHideSet) {
-                if (lower.includes(pattern)) {
-                    console.log(`[user-affix] hiding mod: "${e.text.substring(0, 80)}"`);
-                    return false;
-                }
-            }
-            return true;
-        });
+    const visibleEntries = userHideSet.size === 0 ? flatEntries : flatEntries.filter(e => {
+        const lower = e.text.toLowerCase();
+        for (const p of userHideSet) if (lower.includes(p)) { console.log(`[user-affix] hiding: "${e.text.substring(0, 80)}"`); return false; }
+        return true;
+    });
 
-    // Build group associations
+    // Build group associations → O(1) Map for toggleGroupMembers
     const groupToIndices = new Map<string, number[]>();
     for (let i = 0; i < visibleEntries.length; i++) {
         for (const g of visibleEntries[i].groups) {
@@ -199,20 +145,25 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
             groupToIndices.get(g)!.push(i);
         }
     }
-    const assocMap = new Map<number, Set<number>>();
+    assocMap = new Map();
+    const assocSet = new Map<number, Set<number>>();
     for (const [, indices] of groupToIndices) {
         if (indices.length < 2) continue;
         for (const a of indices) {
             for (const b of indices) {
-                if (a !== b) {
-                    if (!assocMap.has(a)) assocMap.set(a, new Set());
-                    assocMap.get(a)!.add(b);
-                }
+                if (a === b) continue;
+                if (!assocSet.has(a)) assocSet.set(a, new Set());
+                assocSet.get(a)!.add(b);
             }
         }
     }
+    // Populate both the local Map (for toggleGroupMembers) and the Global array (for MapAssociation)
     associations.length = 0;
-    for (const [e, t] of assocMap) associations.push([e, Array.from(t)]);
+    for (const [k, v] of assocSet) {
+        const arr = Array.from(v);
+        assocMap.set(k, arr);
+        associations.push([k, arr]);
+    }
 
     // Build line relations
     lineRelations.clear();
@@ -232,11 +183,7 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
     }
     for (const [, indices] of lineToIndices) {
         if (indices.length < 2) continue;
-        for (const a of indices) {
-            for (const b of indices) {
-                if (a !== b) addLineRelation(a, b);
-            }
-        }
+        for (const a of indices) for (const b of indices) if (a !== b) addLineRelation(a, b);
     }
 
     const regularEntries:  { idx: number }[] = [];
@@ -249,29 +196,22 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
         const fb = fallbacks.get(e.text) ?? null;
         const mod = new Modifier(e.text, i, e.groups, true, e.t17, e.vaal, e.implicit, fb);
         modifiers.push(mod);
-        if (e.implicit)  implicitEntries.push({ idx: i });
-        else if (e.vaal) vaalEntries.push({ idx: i });
-        else if (e.t17)  t17Entries.push({ idx: i });
-        else             regularEntries.push({ idx: i });
+        if (e.implicit)       implicitEntries.push({ idx: i });
+        else if (e.vaal)      vaalEntries.push({ idx: i });
+        else if (e.t17)       t17Entries.push({ idx: i });
+        else                  regularEntries.push({ idx: i });
     }
 
-    console.log(`[buildModifiers] total=${visibleEntries.length} (${flatEntries.length - visibleEntries.length} hidden by user-affix) regular=${regularEntries.length} t17=${t17Entries.length} vaal=${vaalEntries.length} implicit=${implicitEntries.length} associations=${associations.length} lineRelations=${lineRelations.size}`);
+    console.log(`[buildModifiers] total=${visibleEntries.length} (${flatEntries.length - visibleEntries.length} hidden) regular=${regularEntries.length} t17=${t17Entries.length} vaal=${vaalEntries.length} implicit=${implicitEntries.length}`);
 
-    // Sort each group by user-defined weight (descending — highest weight first).
-    // Mods with no matching weight rule stay at weight 0 and appear after weighted mods.
     const getWeight = (idx: number): number => {
-        if (userWeightMap.size === 0) return 0;
+        if (!userWeightMap.size) return 0;
         const text = modifiers[idx].getModifier().toLowerCase();
         let best = 0;
-        for (const [pattern, w] of userWeightMap) {
-            if (text.includes(pattern) && w > best) best = w;
-        }
+        for (const [p, w] of userWeightMap) if (text.includes(p) && w > best) best = w;
         return best;
     };
-
-    const byWeightDesc = (a: { idx: number }, b: { idx: number }) =>
-        getWeight(b.idx) - getWeight(a.idx);
-
+    const byWeightDesc = (a: { idx: number }, b: { idx: number }) => getWeight(b.idx) - getWeight(a.idx);
     regularEntries.sort(byWeightDesc);
     t17Entries.sort(byWeightDesc);
     vaalEntries.sort(byWeightDesc);
@@ -279,24 +219,20 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
 
     const targets = document.querySelectorAll(".mod-container");
     for (const { idx } of regularEntries) {
-        for (let j = 0; j < targets.length; j++) {
+        for (let j = 0; j < targets.length; j++)
             targets[j].appendChild(createSelectableContainer(idx, j === 0 ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE, modifiers[idx]));
-        }
     }
     for (const { idx } of t17Entries) {
-        for (let j = 0; j < targets.length; j++) {
+        for (let j = 0; j < targets.length; j++)
             targets[j].insertBefore(createSelectableContainer(idx, j === 0 ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE, modifiers[idx]), targets[j].firstChild);
-        }
     }
     for (const { idx } of vaalEntries) {
-        for (let j = 0; j < targets.length; j++) {
+        for (let j = 0; j < targets.length; j++)
             targets[j].insertBefore(createSelectableContainer(idx, j === 0 ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE, modifiers[idx]), targets[j].firstChild);
-        }
     }
     for (const { idx } of implicitEntries) {
-        for (let j = 0; j < targets.length; j++) {
+        for (let j = 0; j < targets.length; j++)
             targets[j].insertBefore(createSelectableContainer(idx, j === 0 ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE, modifiers[idx]), targets[j].firstChild);
-        }
     }
 
     rebuild();
@@ -307,11 +243,9 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
 function createSelectableContainer(index: number, type: ModifierType, modifier: Modifier): HTMLDivElement {
     const div = document.createElement("div");
     div.classList.add("selectable");
-
     if (modifier.isImplicit()) { div.classList.add("implicit"); div.style.display = "none"; }
     else if (modifier.isVaal()) { div.classList.add("vaal"); div.style.display = "none"; }
-    else if (modifier.isT17()) { div.classList.add("t17"); div.style.display = "none"; }
-
+    else if (modifier.isT17())  { div.classList.add("t17");  div.style.display = "none"; }
     div.dataset.mod      = index.toString();
     div.dataset.t17      = modifier.isT17().toString();
     div.dataset.vaal     = modifier.isVaal().toString();
@@ -319,88 +253,74 @@ function createSelectableContainer(index: number, type: ModifierType, modifier: 
     div.textContent      = modifier.getModifier().replace(/\\n/g, "\n");
 
     div.addEventListener('click', (event) => {
-        const element = event.target as HTMLElement;
-        if (element.classList.contains('disabled-item')) return;
-
-        element.classList.toggle('selected-item');
-        const active = element.classList.contains('selected-item');
+        const el = event.target as HTMLElement;
+        if (el.classList.contains('disabled-item')) return;
+        el.classList.toggle('selected-item');
+        const active = el.classList.contains('selected-item');
         const array  = type === ModifierType.EXCLUSIVE ? exclusive : inclusive;
-
-        disableCounterpartContainer(index, active, type, modifier);
+        disableCounterpart(index, active, type, modifier);
         handleModifierSelection(active, array, modifier);
         toggleGroupMembers(index, active);
-
         const optimizeChecked = (document.getElementById('optimize') as HTMLInputElement).checked;
-        console.log(`[click] mod idx=${index} active=${active} optimize=${optimizeChecked} excl=${exclusive.length} incl=${inclusive.length}`);
-
+        console.log(`[click] idx=${index} active=${active} excl=${exclusive.length} incl=${inclusive.length}`);
         if (!optimizeChecked) modal('loading-modal', true);
         construct();
     });
-
     return div;
 }
 
 function handleModifierSelection(active: boolean, array: Modifier[], modifier: Modifier): void {
-    if (active) {
-        array.push(modifier);
-    } else {
-        const idx = array.indexOf(modifier);
-        if (idx > -1) array.splice(idx, 1);
-    }
+    if (active) { array.push(modifier); }
+    else { const i = array.indexOf(modifier); if (i > -1) array.splice(i, 1); }
 }
 
-function disableCounterpartContainer(index: number, active: boolean, type: ModifierType, modifier: Modifier): void {
-    const target  = type === ModifierType.EXCLUSIVE ? 'inclusive' : 'exclusive';
-    const element = document.querySelector(`#${target} .selectable[data-mod="${index}"]`);
-    if (!element) return;
+function disableCounterpart(index: number, active: boolean, type: ModifierType, modifier: Modifier): void {
+    const col = type === ModifierType.EXCLUSIVE ? 'inclusive' : 'exclusive';
+    const el  = document.querySelector(`#${col} .selectable[data-mod="${index}"]`);
+    if (!el) return;
     if (active) {
-        element.classList.add('disabled-item');
+        el.classList.add('disabled-item');
         handleModifierSelection(false, type === ModifierType.EXCLUSIVE ? inclusive : exclusive, modifier);
     } else {
-        element.classList.remove('disabled-item');
+        el.classList.remove('disabled-item');
     }
 }
 
-function toggleGroupMembers(index: number, active: boolean, visibilityOverride?: { t17: boolean; vaal: boolean; implicit: boolean }): void {
+// Traverse the group/line-relation graph from `index` and toggle disabled-item
+// on all reachable mods. Only traverses mods that are currently visible
+// (respects t17/vaal/implicit checkbox state at call time).
+function toggleGroupMembers(index: number, active: boolean): void {
+    const t17On      = (document.getElementById('t17')      as HTMLInputElement).checked;
+    const vaalOn     = (document.getElementById('vaal')     as HTMLInputElement).checked;
+    const implicitOn = (document.getElementById('implicit') as HTMLInputElement).checked;
+
+    const isVisible = (mod: Modifier) =>
+        !(mod.isT17() && !t17On) && !(mod.isVaal() && !vaalOn) && !(mod.isImplicit() && !implicitOn);
+
     const visited = new Set<number>([index]);
     const queue   = [index];
 
-    const t17Enabled      = visibilityOverride?.t17      ?? (document.getElementById('t17')      as HTMLInputElement).checked;
-    const vaalEnabled     = visibilityOverride?.vaal     ?? (document.getElementById('vaal')     as HTMLInputElement).checked;
-    const implicitEnabled = visibilityOverride?.implicit ?? (document.getElementById('implicit') as HTMLInputElement).checked;
-
-    const isVisible = (mod: Modifier): boolean => {
-        if (mod.isT17()      && !t17Enabled)     return false;
-        if (mod.isVaal()     && !vaalEnabled)     return false;
-        if (mod.isImplicit() && !implicitEnabled) return false;
-        return true;
-    };
-
-    const lineRelatedOfOrigin = lineRelations.get(index) ?? new Set<number>();
-    for (const r of lineRelatedOfOrigin) {
+    // Seed with direct line-relations of the origin mod
+    for (const r of (lineRelations.get(index) ?? [])) {
         if (visited.has(r)) continue;
-        const related = modifiers[r];
-        if (related && !isVisible(related)) continue;
-        visited.add(r);
-        queue.push(r);
+        const rel = modifiers[r];
+        if (rel && isVisible(rel)) { visited.add(r); queue.push(r); }
     }
 
+    // BFS over group associations (O(1) Map lookup)
     while (queue.length > 0) {
-        const current = queue.shift()!;
-        const groupRelated = associations.find(([idx]) => idx === current)?.[1] ?? [];
-        for (const r of groupRelated) {
+        const cur = queue.shift()!;
+        for (const r of (assocMap.get(cur) ?? [])) {
             if (visited.has(r)) continue;
-            const related = modifiers[r];
-            if (related && !isVisible(related)) continue;
-            visited.add(r);
-            queue.push(r);
+            const rel = modifiers[r];
+            if (rel && isVisible(rel)) { visited.add(r); queue.push(r); }
         }
     }
 
-    for (const relatedIndex of visited) {
-        if (relatedIndex === index) continue;
-        for (const typeStr of ['exclusive', 'inclusive']) {
-            const el = document.querySelector(`#${typeStr} .selectable[data-mod="${relatedIndex}"]`);
+    for (const r of visited) {
+        if (r === index) continue;
+        for (const col of ['exclusive', 'inclusive']) {
+            const el = document.querySelector(`#${col} .selectable[data-mod="${r}"]`);
             if (el) el.classList.toggle('disabled-item', active);
         }
     }
@@ -409,20 +329,16 @@ function toggleGroupMembers(index: number, active: boolean, visibilityOverride?:
 // ─── Rebuild from localStorage ────────────────────────────────────────────────
 
 function rebuild(): void {
-    // Restore the active profile name, then ensure "default" profile exists.
     activeProfile = localStorage.getItem('activeProfile') ?? 'default';
-
-    // If the "default" profile doesn't exist yet, save current (blank) state as default now.
-    if (!localStorage.getItem(PROFILE_KEY_PREFIX + 'default')) {
+    if (!localStorage.getItem(PROFILE_KEY_PREFIX + 'default'))
         localStorage.setItem(PROFILE_KEY_PREFIX + 'default', packState(captureState('default')));
-    }
 
     restoreCheckbox('t17',      val => toggle('t17',      val));
     restoreCheckbox('vaal',     val => toggle('vaal',     val));
     restoreCheckbox('implicit', val => toggle('implicit', val));
 
     const typeStored = localStorage.getItem('maps-include');
-    const mapType: ModifierType = Number(typeStored ?? 0) as ModifierType;
+    const mapType = Number(typeStored ?? 0) as ModifierType;
     (document.getElementById('maps-include') as HTMLInputElement).checked = mapType === ModifierType.INCLUSIVE;
     (document.getElementById('maps-exclude') as HTMLInputElement).checked = mapType !== ModifierType.INCLUSIVE;
 
@@ -432,10 +348,7 @@ function rebuild(): void {
     }
 
     const savedRegex = localStorage.getItem("regex");
-    if (savedRegex) {
-        document.getElementById('regex')!.innerText = savedRegex;
-        restoreSelectionsFromRegex(savedRegex);
-    }
+    if (savedRegex) { document.getElementById('regex')!.innerText = savedRegex; restoreSelectionsFromRegex(savedRegex); }
 
     const corruptedStored = localStorage.getItem('corrupted');
     if (corruptedStored) {
@@ -445,8 +358,8 @@ function rebuild(): void {
 
     for (const [main, secondary] of [
         ['quantity', 'optimize-quantity'], ['pack-size', 'optimize-pack'],
-        ['scarabs', 'optimize-scarab'], ['maps', 'optimize-maps'],
-        ['currency', 'optimize-currency'], ['rarity', 'optimize-rarity'],
+        ['scarabs',  'optimize-scarab'],   ['maps',      'optimize-maps'],
+        ['currency', 'optimize-currency'], ['rarity',    'optimize-rarity'],
     ]) {
         (document.getElementById(main) as HTMLInputElement).value = localStorage.getItem(main) ?? "";
         const sec = localStorage.getItem(secondary);
@@ -471,31 +384,24 @@ function restoreSelectionsFromRegex(savedRegex: string): void {
     ) ?? [];
 
     for (const arg of args) {
-        const containerId = arg.indexOf('!') !== -1 ? 'exclusive' : 'inclusive';
-        const container   = (document.getElementById(containerId) as HTMLElement)?.querySelector('.mod-container');
+        const containerId = arg.includes('!') ? 'exclusive' : 'inclusive';
+        const container   = document.getElementById(containerId)?.querySelector('.mod-container');
         if (!container) continue;
-
-        const pattern  = arg.replace('!', '');
-        const re       = new RegExp(pattern, 'i');
-        const children = container.children;
-
-        for (let i = 0; i < children.length; i++) {
-            const child = children[i] as HTMLElement;
+        const re = new RegExp(arg.replace('!', ''), 'i');
+        for (const child of Array.from(container.children) as HTMLElement[]) {
             if (child.dataset.t17      === 'true' && t17Stored      === 'false') continue;
             if (child.dataset.vaal     === 'true' && vaalStored     === 'false') continue;
             if (child.dataset.implicit === 'true' && implicitStored === 'false') continue;
             if (child.classList.contains('disabled-item')) continue;
             if (!child.textContent || !re.test(child.textContent)) continue;
-
             const modIndex = Number(child.dataset.mod);
             const modifier = modifiers.find(m => m.getIndex() === modIndex);
             if (!modifier) continue;
-
             child.classList.toggle('selected-item');
             const active = child.classList.contains('selected-item');
             const type   = containerId === 'exclusive' ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE;
-            disableCounterpartContainer(modIndex, active, type, modifier);
-            handleModifierSelection(active, (type === ModifierType.EXCLUSIVE ? exclusive : inclusive), modifier);
+            disableCounterpart(modIndex, active, type, modifier);
+            handleModifierSelection(active, type === ModifierType.EXCLUSIVE ? exclusive : inclusive, modifier);
             toggleGroupMembers(modIndex, active);
         }
     }
@@ -505,64 +411,37 @@ function restoreSelectionsFromRegex(savedRegex: string): void {
 
 function rollbackLastMod(type: ModifierType): void {
     const array = type === ModifierType.EXCLUSIVE ? exclusive : inclusive;
-    if (array.length === 0) return;
+    if (!array.length) return;
     const mod = array[array.length - 1];
-    console.warn(`[rollback] removing last ${ModifierType[type]} mod idx=${mod.getIndex()} "${mod.getModifier().substring(0, 60)}"`);
-
+    console.warn(`[rollback] ${ModifierType[type]} idx=${mod.getIndex()} "${mod.getModifier().substring(0, 60)}"`);
     handleModifierSelection(false, array, mod);
     toggleGroupMembers(mod.getIndex(), false);
-    disableCounterpartContainer(mod.getIndex(), false, type, mod);
-
-    const typeStr = type === ModifierType.EXCLUSIVE ? 'exclusive' : 'inclusive';
-    const el = document.querySelector(`#${typeStr} .selectable[data-mod="${mod.getIndex()}"]`);
-    if (el) el.classList.remove('selected-item');
-
+    disableCounterpart(mod.getIndex(), false, type, mod);
+    const col = type === ModifierType.EXCLUSIVE ? 'exclusive' : 'inclusive';
+    document.querySelector(`#${col} .selectable[data-mod="${mod.getIndex()}"]`)?.classList.remove('selected-item');
     selection.delete(type);
     cache.delete(type);
 }
 
 function generate(): void {
-    console.log(`[generate] START — excl=${exclusive.length} incl=${inclusive.length}`);
-    exclusive.forEach((m, i) => console.log(`  excl[${i}] idx=${m.getIndex()} "${m.getModifier().substring(0, 60)}"`));
-    inclusive.forEach((m, i) => console.log(`  incl[${i}] idx=${m.getIndex()} "${m.getModifier().substring(0, 60)}"`));
-
+    console.log(`[generate] excl=${exclusive.length} incl=${inclusive.length}`);
     document.getElementById('regex')!.innerText = "crunching numbers...";
     document.getElementById('hint')!.innerText  = "";
 
     setTimeout(() => {
         const any = (document.getElementById('any') as HTMLInputElement).checked;
         localStorage.setItem("any", String(any));
-        console.log(`[generate] inside setTimeout, any=${any}`);
+        let exclusiveExpr = "", inclusiveExpr = "", failed = false;
 
-        let exclusiveExpr = "";
-        let inclusiveExpr = "";
-        let failed        = false;
+        try { exclusiveExpr = buildModifierExpression(true, ModifierType.EXCLUSIVE); }
+        catch (e) { console.error("[generate] EXCLUSIVE threw:", e); rollbackLastMod(ModifierType.EXCLUSIVE); failed = true; }
 
-        try {
-            console.log(`[generate] building EXCLUSIVE...`);
-            exclusiveExpr = buildModifierExpression(true, ModifierType.EXCLUSIVE);
-            console.log(`[generate] EXCLUSIVE done: "${exclusiveExpr}"`);
-        } catch (e) {
-            console.error(`[generate] EXCLUSIVE threw:`, e);
-            rollbackLastMod(ModifierType.EXCLUSIVE);
-            failed = true;
-        }
-
-        if (!failed) {
-            try {
-                console.log(`[generate] building INCLUSIVE (any=${any})...`);
-                inclusiveExpr = buildModifierExpression(any, ModifierType.INCLUSIVE);
-                console.log(`[generate] INCLUSIVE done: "${inclusiveExpr}"`);
-            } catch (e) {
-                console.error(`[generate] INCLUSIVE threw:`, e);
-                rollbackLastMod(ModifierType.INCLUSIVE);
-                failed = true;
-            }
-        }
+        if (!failed) try { inclusiveExpr = buildModifierExpression(any, ModifierType.INCLUSIVE); }
+        catch (e) { console.error("[generate] INCLUSIVE threw:", e); rollbackLastMod(ModifierType.INCLUSIVE); failed = true; }
 
         if (failed) {
             document.getElementById('regex')!.innerText = "";
-            document.getElementById('hint')!.innerText  = "⚠ Could not find a unique pattern for that selection — mod was deselected.";
+            document.getElementById('hint')!.innerText  = "⚠ Could not find a unique pattern — mod was deselected.";
             modal('loading-modal', false);
             return;
         }
@@ -571,19 +450,16 @@ function generate(): void {
         const mapExpr       = buildMapExpression();
         const corruptedExpr = buildCorruptedExpression();
 
-        let base  = exclusiveExpr + ' ' + inclusiveExpr;
-        base     += inclusiveExpr.trim().endsWith('"') ? '' : ' ';
+        let base = exclusiveExpr + ' ' + inclusiveExpr;
+        base += inclusiveExpr.trim().endsWith('"') ? '' : ' ';
         const regex = (base + utilityExpr + mapExpr + corruptedExpr).trim();
 
         console.log(`[generate] final regex: "${regex}"`);
-
         document.getElementById('regex')!.innerText = regex;
         localStorage.setItem("regex", regex);
-
         const hint = document.getElementById('hint')!;
         hint.innerText   = regex.length > 0 ? `length: ${regex.length} / 250` : '';
         hint.style.color = regex.length > 250 ? '#ff4d4d' : '#e0e0e0';
-
         modal('loading-modal', false);
     }, 100);
 }
@@ -594,8 +470,7 @@ function construct(): void {
 }
 
 function compare(a: any[], b: any[]): boolean {
-    if (a.length !== b.length) return false;
-    return a.every((v, i) => v === b[i]);
+    return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 
 function buildSuitableExcludeList(type: ModifierType): Blacklist {
@@ -627,33 +502,25 @@ function buildModifierExpression(any: boolean, type: ModifierType): string {
     if (!compare(previous, target)) {
         const result      = new Set<string>();
         const association = new MapAssociation();
-        console.log(`[buildModifierExpression] calling filter.create, modifiers pool size=${modifiers.length}`);
         filter.create(association, result, target, 0);
-        console.log(`[buildModifierExpression] filter.create done, result=${JSON.stringify(Array.from(result))}`);
+        console.log(`[buildModifierExpression] result=${JSON.stringify(Array.from(result))}`);
         selection.set(type, [...target]);
 
         const corrupted = localStorage.getItem('corrupted') ?? 'corrupted-ignore';
 
         if (any) {
-            // Weave pte into the exclusive token when blocking corrupted maps,
-            // or into the inclusive token when forcing corrupted maps.
             const weave = (type === ModifierType.EXCLUSIVE && corrupted === 'corrupted-exclude')
                 || (type === ModifierType.INCLUSIVE && corrupted === 'corrupted-include');
             if (weave) result.add('pte');
-
             const joined = Array.from(result).join("|").replace(/#/g, "\\d+");
-            regex = joined.length > 0 ? `"${type === ModifierType.EXCLUSIVE ? '!' : ''}${joined}"` : "";
+            regex = joined ? `"${type === ModifierType.EXCLUSIVE ? '!' : ''}${joined}"` : "";
         } else {
             let builder = "";
             for (const mod of result) {
                 const value = mod.replace(/#/g, "\\d+");
                 builder += mod.includes(" ") ? `"${value}" ` : `${value} `;
             }
-            // In all-mode inclusive, pte can't be woven into a combined token
-            // so append it as its own token if forcing corrupted maps.
-            if (type === ModifierType.INCLUSIVE && corrupted === 'corrupted-include') {
-                builder += '"pte" ';
-            }
+            if (type === ModifierType.INCLUSIVE && corrupted === 'corrupted-include') builder += '"pte" ';
             regex = builder;
         }
         cache.set(type, regex);
@@ -692,14 +559,12 @@ function buildMapExpression(): string {
     const type = (document.getElementById('maps-include') as HTMLInputElement).checked
         ? ModifierType.INCLUSIVE : ModifierType.EXCLUSIVE;
     localStorage.setItem('maps-include', type.toString());
-
     const maps: string[] = [];
     for (const [id, char] of [['map-normal', 'n'], ['map-rare', 'r'], ['map-magic', 'm']] as const) {
         const checked = (document.getElementById(id) as HTMLInputElement).checked;
         localStorage.setItem(id, String(checked));
         if (checked) maps.push(char);
     }
-
     const useInclusive = type === ModifierType.INCLUSIVE && maps.length !== 3 && maps.length !== 0;
     const useExclusive = type === ModifierType.EXCLUSIVE && maps.length !== 0;
     if (useInclusive || useExclusive) {
@@ -710,9 +575,6 @@ function buildMapExpression(): string {
 }
 
 function buildCorruptedExpression(): string {
-    // Only emits a standalone token when there are no exclusive/inclusive mods selected.
-    // When mods are selected, pte is already woven into the exclusive or inclusive
-    // expression inside buildModifierExpression — so we must not double-emit it here.
     const corrupted = localStorage.getItem('corrupted') ?? 'corrupted-ignore';
     if (corrupted === 'corrupted-exclude' && exclusive.length === 0) return ' "!pte"';
     if (corrupted === 'corrupted-include' && inclusive.length === 0) return ' "pte"';
@@ -732,9 +594,7 @@ function tracker(): void {
     //debugSanityCheck();
 }
 
-function exceptional(error: any): void {
-    console.error(error);
-}
+function exceptional(error: any): void { console.error(error); }
 
 function toggle(attribute: string, selected: boolean): void {
     document.querySelectorAll(`[data-${attribute}="true"]`).forEach(e => {
@@ -749,36 +609,24 @@ function filter(element: HTMLElement): void {
     const query     = (element as HTMLInputElement).value;
     const container = element.closest('.container-search')?.nextElementSibling as HTMLElement;
     if (!container?.classList.contains('mod-container')) return;
-
     const t17El      = document.getElementById('t17')      as HTMLInputElement;
     const vaalEl     = document.getElementById('vaal')     as HTMLInputElement;
     const implicitEl = document.getElementById('implicit') as HTMLInputElement;
-
     let re: RegExp | null = null;
     if (query.length > 0) {
-        try {
-            re = new RegExp(query, 'i');
-        } catch {
-            re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-        }
+        try { re = new RegExp(query, 'i'); }
+        catch { re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'); }
     }
-
     for (const child of Array.from(container.children) as HTMLElement[]) {
         const text = child.textContent?.toLowerCase() ?? '';
-        const matchesQ = re === null || re.test(text);
-
-        if (!matchesQ) { child.style.display = 'none'; continue; }
-
+        if (re && !re.test(text)) { child.style.display = 'none'; continue; }
         const isImplicit = child.dataset.implicit === 'true';
         const isVaal     = child.dataset.vaal     === 'true';
         const isT17      = child.dataset.t17      === 'true';
         const isNormal   = !isImplicit && !isVaal && !isT17;
-
         child.style.display = (
-            (isImplicit && implicitEl.checked) ||
-            (isVaal     && vaalEl.checked)     ||
-            (isT17      && t17El.checked)      ||
-            isNormal
+            (isImplicit && implicitEl.checked) || (isVaal && vaalEl.checked) ||
+            (isT17 && t17El.checked) || isNormal
         ) ? '' : 'none';
     }
 }
@@ -790,18 +638,16 @@ function wipe(): void {
     inclusive.length = 0;
     selection.clear();
     cache.clear();
-    document.querySelectorAll('.selected-item, .disabled-item').forEach(el => {
-        el.classList.remove('selected-item', 'disabled-item');
-    });
+    document.querySelectorAll('.selected-item, .disabled-item').forEach(el =>
+        el.classList.remove('selected-item', 'disabled-item')
+    );
 }
 
 function handleCheckboxChange(checkbox: HTMLInputElement): void {
     const group = Array.from(checkbox.classList).find(c => c.startsWith("btn-group-"));
     if (!group) return;
     if (checkbox.checked) {
-        document.querySelectorAll<HTMLInputElement>(`input.${group}`).forEach(box => {
-            if (box !== checkbox) box.checked = false;
-        });
+        document.querySelectorAll<HTMLInputElement>(`input.${group}`).forEach(b => { if (b !== checkbox) b.checked = false; });
     } else {
         const siblings = Array.from(document.querySelectorAll<HTMLInputElement>(`input.${group}`));
         if (!siblings.some(b => b.checked)) checkbox.checked = true;
@@ -811,205 +657,165 @@ function handleCheckboxChange(checkbox: HTMLInputElement): void {
 // ─── Event Setup ──────────────────────────────────────────────────────────────
 
 function setup(): void {
-    document.querySelectorAll('.container-search').forEach(el => {
-        el.addEventListener('input', e => filter(e.target as HTMLElement));
-    });
+    document.querySelectorAll('.container-search').forEach(el =>
+        el.addEventListener('input', e => filter(e.target as HTMLElement))
+    );
 
     for (const attr of ['t17', 'vaal', 'implicit'] as const) {
         document.getElementById(attr)!.addEventListener('change', e => {
             const checked = (e.target as HTMLInputElement).checked;
 
             if (!checked) {
-                // Capture visibility state BEFORE toggle() hides anything,
-                // so toggleGroupMembers can traverse bridges that are about to disappear.
-                const oldVisibility = {
-                    t17:      (document.getElementById('t17')      as HTMLInputElement).checked,
-                    vaal:     (document.getElementById('vaal')     as HTMLInputElement).checked,
-                    implicit: (document.getElementById('implicit') as HTMLInputElement).checked,
-                };
-
-                const isOfType = (mod: Modifier) => {
-                    if (attr === 't17'      && mod.isT17())      return true;
-                    if (attr === 'vaal'     && mod.isVaal())     return true;
-                    if (attr === 'implicit' && mod.isImplicit()) return true;
-                    return false;
-                };
-
-                // Undo group disabling using old visibility (bridges still intact)
-                for (const [type, array] of [[ModifierType.EXCLUSIVE, exclusive], [ModifierType.INCLUSIVE, inclusive]] as const) {
-                    for (const mod of array.filter(isOfType)) {
-                        disableCounterpartContainer(mod.getIndex(), false, type, mod);
-                        toggleGroupMembers(mod.getIndex(), false, oldVisibility);
-                    }
-                }
-
+                // Remove mods of this type from selection arrays
+                const isOfType = (mod: Modifier) =>
+                    (attr === 't17' && mod.isT17()) || (attr === 'vaal' && mod.isVaal()) || (attr === 'implicit' && mod.isImplicit());
                 exclusive = exclusive.filter(m => !isOfType(m));
                 inclusive = inclusive.filter(m => !isOfType(m));
-                selection.clear();
-                cache.clear();
             }
 
+            // Update visibility first so toggleGroupMembers reads the new state
             toggle(attr, checked);
+
+            // Wipe all disabled-item and reapply from remaining selections.
+            // This correctly handles both directions:
+            //   unchecking — bridges through now-hidden mods no longer exist
+            //   checking   — newly visible mods may now be reachable and need disabling
+            document.querySelectorAll('.disabled-item').forEach(el => el.classList.remove('disabled-item'));
+
+            // Restore counterpart disabled-item (same mod in opposite column)
+            for (const [type, array] of [[ModifierType.EXCLUSIVE, exclusive], [ModifierType.INCLUSIVE, inclusive]] as [ModifierType, Modifier[]][]) {
+                const col = type === ModifierType.EXCLUSIVE ? 'inclusive' : 'exclusive';
+                for (const mod of array) {
+                    document.querySelector(`#${col} .selectable[data-mod="${mod.getIndex()}"]`)?.classList.add('disabled-item');
+                }
+            }
+
+            // Restore group-member disabled-item
+            for (const array of [exclusive, inclusive]) {
+                for (const mod of array) toggleGroupMembers(mod.getIndex(), true);
+            }
+
+            selection.clear();
+            cache.clear();
             construct();
         });
     }
 
     document.getElementById('clear')!.addEventListener('click', wipe);
     document.getElementById('reset')!.addEventListener('click', () => { localStorage.clear(); window.location.reload(); });
-    document.getElementById('copy')!.addEventListener('click', () => {
-        navigator.clipboard.writeText(document.getElementById('regex')!.innerText);
-    });
-    document.getElementById('generate')!.addEventListener('click', () => {
-        modal('loading-modal', true);
-        generate();
-    });
-    document.getElementById('report')!.addEventListener('click', () => {
-        window.open('https://github.com/hawolt/poe-regex/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=', '_blank');
-    });
-    document.getElementById('suggest')!.addEventListener('click', () => {
-        window.open('https://github.com/hawolt/poe-regex/issues/new?assignees=&labels=enhancement&projects=&template=feature_request.md&title=', '_blank');
-    });
-
+    document.getElementById('copy')!.addEventListener('click', () =>
+        navigator.clipboard.writeText(document.getElementById('regex')!.innerText)
+    );
+    document.getElementById('generate')!.addEventListener('click', () => { modal('loading-modal', true); generate(); });
+    document.getElementById('report')!.addEventListener('click', () =>
+        window.open('https://github.com/hawolt/poe-regex/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=', '_blank')
+    );
+    document.getElementById('suggest')!.addEventListener('click', () =>
+        window.open('https://github.com/hawolt/poe-regex/issues/new?assignees=&labels=enhancement&projects=&template=feature_request.md&title=', '_blank')
+    );
     document.getElementById('export')?.addEventListener('click', openExportModal);
-    document.getElementById('profiles')?.addEventListener('click', () => {
-        renderProfileList();
-        modal('profiles-modal', true);
-    });
+    document.getElementById('profiles')?.addEventListener('click', () => { renderProfileList(); modal('profiles-modal', true); });
     document.getElementById('export-copy')?.addEventListener('click', copyExportString);
     document.getElementById('export-import-load')?.addEventListener('click', importFromExportString);
     document.getElementById('profile-save')?.addEventListener('click', saveProfile);
 
-    document.querySelectorAll('.close-modal').forEach(el => {
+    document.querySelectorAll('.close-modal').forEach(el =>
         el.addEventListener('click', e => {
             const content = (e.target as HTMLElement).closest('.modal-content');
             if (content?.parentElement?.id) modal(content.parentElement.id, false);
-        });
-    });
+        })
+    );
 
-    document.querySelectorAll('.trigger-0').forEach(el => { el.addEventListener('change', () => construct()); });
-    document.querySelectorAll('.trigger-1').forEach(el => { el.addEventListener('input',  () => construct()); });
-    document.querySelectorAll('.trigger-2').forEach(el => { el.addEventListener('input',  () => selection.delete(ModifierType.INCLUSIVE)); });
-
-    document.querySelectorAll('.trigger-3').forEach(el => {
+    document.querySelectorAll('.trigger-0').forEach(el => el.addEventListener('change', () => construct()));
+    document.querySelectorAll('.trigger-1').forEach(el => el.addEventListener('input',  () => construct()));
+    document.querySelectorAll('.trigger-2').forEach(el => el.addEventListener('input',  () => selection.delete(ModifierType.INCLUSIVE)));
+    document.querySelectorAll('.trigger-3').forEach(el =>
         el.addEventListener('input', e => {
-            const target = e.target as HTMLElement;
-            localStorage.setItem("corrupted", target.id);
-            // Invalidate cached expressions — pte weaving depends on corrupted state
-            // so the cache must be cleared even if mod selections haven't changed.
-            selection.clear();
-            cache.clear();
+            localStorage.setItem("corrupted", (e.target as HTMLElement).id);
+            selection.clear(); cache.clear();
             construct();
-        });
-    });
-
-    document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', () => handleCheckboxChange(cb));
-    });
+        })
+    );
+    document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach(cb =>
+        cb.addEventListener('change', () => handleCheckboxChange(cb))
+    );
 }
 
 // ─── Debug ────────────────────────────────────────────────────────────────────
 
 function debugSanityCheck(): void {
-    console.group('[sanity] standalone regex check — testing all mods individually (t17+vaal+implicit enabled)');
-    const emptyBlacklist = new Blacklist();
-    const results: { idx: number; t17: string; vaal: string; implicit: string; mode: string; text: string; status: string }[] = [];
+    console.group('[sanity] testing all mods individually');
+    const empty = new Blacklist();
+    const results: any[] = [];
     for (const mod of modifiers) {
         for (const useAny of [false, true]) {
             const f = useAny
-                ? new FilterModifierAny(true, true, true, modifiers, emptyBlacklist, blacklist)
-                : new FilterModifierAll(true, true, true, modifiers, emptyBlacklist, blacklist);
+                ? new FilterModifierAny(true, true, true, modifiers, empty, blacklist)
+                : new FilterModifierAll(true, true, true, modifiers, empty, blacklist);
             const result = new Set<string>();
-            const assoc  = new MapAssociation();
-            try {
-                f.create(assoc, result, [mod], 0);
-            } catch (e) {
-                results.push({
-                    idx: mod.getIndex(), t17: mod.isT17() ? '✓' : '',
-                    vaal: mod.isVaal() ? '✓' : '', implicit: mod.isImplicit() ? '✓' : '',
-                    mode: useAny ? 'any' : 'all', text: mod.getModifier().substring(0, 80), status: '✗ FAILED',
-                });
-            }
+            try { f.create(new MapAssociation(), result, [mod], 0); }
+            catch { results.push({ idx: mod.getIndex(), mode: useAny ? 'any' : 'all', text: mod.getModifier().substring(0, 80), status: '✗' }); }
         }
     }
-    if (results.length === 0) console.log('[sanity] All mods passed ✓');
-    else console.table(results);
+    if (!results.length) console.log('All mods passed ✓'); else console.table(results);
     console.groupEnd();
 }
 
 // ─── State Capture / Apply ────────────────────────────────────────────────────
 
 interface ConfigState {
-    profileName:     string;
-    t17:             boolean;
-    vaal:            boolean;
-    implicit:        boolean;
-    any:             boolean;
-    mapsInclude:     boolean;
-    mapNormal:       boolean;
-    mapMagic:        boolean;
-    mapRare:         boolean;
-    corrupted:       string;
-    quantity:        string;  optimizeQuantity: boolean;
-    packSize:        string;  optimizePack:     boolean;
-    scarabs:         string;  optimizeScarab:   boolean;
-    maps:            string;  optimizeMaps:     boolean;
-    currency:        string;  optimizeCurrency: boolean;
-    rarity:          string;  optimizeRarity:   boolean;
-    regex:           string;
+    profileName: string;
+    t17: boolean; vaal: boolean; implicit: boolean; any: boolean;
+    mapsInclude: boolean; mapNormal: boolean; mapMagic: boolean; mapRare: boolean;
+    corrupted: string;
+    quantity: string;  optimizeQuantity: boolean;
+    packSize: string;  optimizePack:     boolean;
+    scarabs:  string;  optimizeScarab:   boolean;
+    maps:     string;  optimizeMaps:     boolean;
+    currency: string;  optimizeCurrency: boolean;
+    rarity:   string;  optimizeRarity:   boolean;
+    regex: string;
 }
 
 function captureState(profileName?: string): ConfigState {
     const g = (id: string) => document.getElementById(id) as HTMLInputElement;
     return {
         profileName:     profileName ?? activeProfile,
-        t17:             g('t17').checked,
-        vaal:            g('vaal').checked,
-        implicit:        g('implicit').checked,
-        any:             g('any').checked,
+        t17:             g('t17').checked,      vaal:        g('vaal').checked,
+        implicit:        g('implicit').checked, any:         g('any').checked,
         mapsInclude:     g('maps-include').checked,
-        mapNormal:       g('map-normal').checked,
-        mapMagic:        g('map-magic').checked,
-        mapRare:         g('map-rare').checked,
+        mapNormal:       g('map-normal').checked, mapMagic:  g('map-magic').checked, mapRare: g('map-rare').checked,
         corrupted:       localStorage.getItem('corrupted') ?? 'corrupted-ignore',
-        quantity:        g('quantity').value,   optimizeQuantity: g('optimize-quantity').checked,
-        packSize:        g('pack-size').value,  optimizePack:     g('optimize-pack').checked,
-        scarabs:         g('scarabs').value,    optimizeScarab:   g('optimize-scarab').checked,
-        maps:            g('maps').value,       optimizeMaps:     g('optimize-maps').checked,
-        currency:        g('currency').value,   optimizeCurrency: g('optimize-currency').checked,
-        rarity:          g('rarity').value,     optimizeRarity:   g('optimize-rarity').checked,
+        quantity:        g('quantity').value,  optimizeQuantity: g('optimize-quantity').checked,
+        packSize:        g('pack-size').value, optimizePack:     g('optimize-pack').checked,
+        scarabs:         g('scarabs').value,   optimizeScarab:   g('optimize-scarab').checked,
+        maps:            g('maps').value,      optimizeMaps:     g('optimize-maps').checked,
+        currency:        g('currency').value,  optimizeCurrency: g('optimize-currency').checked,
+        rarity:          g('rarity').value,    optimizeRarity:   g('optimize-rarity').checked,
         regex:           document.getElementById('regex')!.innerText,
     };
 }
 
 function applyState(state: ConfigState): void {
-    const setChecked = (id: string, val: boolean) => {
-        (document.getElementById(id) as HTMLInputElement).checked = val;
-    };
-    const setValue = (id: string, val: string) => {
-        (document.getElementById(id) as HTMLInputElement).value = val;
-    };
+    const sc = (id: string, val: boolean) => { (document.getElementById(id) as HTMLInputElement).checked = val; };
+    const sv = (id: string, val: string)  => { (document.getElementById(id) as HTMLInputElement).value   = val; };
 
-    setChecked('t17',      state.t17);      toggle('t17',      state.t17);
-    setChecked('vaal',     state.vaal);     toggle('vaal',     state.vaal);
-    setChecked('implicit', state.implicit); toggle('implicit', state.implicit);
-    setChecked('any', state.any);
-    setChecked('all', !state.any);
-
-    setChecked('maps-include', state.mapsInclude);
-    setChecked('maps-exclude', !state.mapsInclude);
-    setChecked('map-normal', state.mapNormal);
-    setChecked('map-magic',  state.mapMagic);
-    setChecked('map-rare',   state.mapRare);
+    sc('t17', state.t17);           toggle('t17', state.t17);
+    sc('vaal', state.vaal);         toggle('vaal', state.vaal);
+    sc('implicit', state.implicit); toggle('implicit', state.implicit);
+    sc('any', state.any); sc('all', !state.any);
+    sc('maps-include', state.mapsInclude); sc('maps-exclude', !state.mapsInclude);
+    sc('map-normal', state.mapNormal); sc('map-magic', state.mapMagic); sc('map-rare', state.mapRare);
 
     const corruptedEl = document.getElementById(state.corrupted) as HTMLInputElement | null;
     if (corruptedEl) { corruptedEl.checked = true; handleCheckboxChange(corruptedEl); }
 
-    setValue('quantity',  state.quantity);  setChecked('optimize-quantity', state.optimizeQuantity);
-    setValue('pack-size', state.packSize);  setChecked('optimize-pack',     state.optimizePack);
-    setValue('scarabs',   state.scarabs);   setChecked('optimize-scarab',   state.optimizeScarab);
-    setValue('maps',      state.maps);      setChecked('optimize-maps',     state.optimizeMaps);
-    setValue('currency',  state.currency);  setChecked('optimize-currency', state.optimizeCurrency);
-    setValue('rarity',    state.rarity);    setChecked('optimize-rarity',   state.optimizeRarity);
+    sv('quantity',  state.quantity);  sc('optimize-quantity', state.optimizeQuantity);
+    sv('pack-size', state.packSize);  sc('optimize-pack',     state.optimizePack);
+    sv('scarabs',   state.scarabs);   sc('optimize-scarab',   state.optimizeScarab);
+    sv('maps',      state.maps);      sc('optimize-maps',     state.optimizeMaps);
+    sv('currency',  state.currency);  sc('optimize-currency', state.optimizeCurrency);
+    sv('rarity',    state.rarity);    sc('optimize-rarity',   state.optimizeRarity);
 
     if (state.regex) {
         document.getElementById('regex')!.innerText = state.regex;
@@ -1018,84 +824,53 @@ function applyState(state: ConfigState): void {
     }
 }
 
-// ─── Minified Export Format ───────────────────────────────────────────────────
-//
-// Instead of verbose JSON, state is packed into a compact array:
-//   [version, bitmask, qty, pack, scar, maps, curr, rar, corruptedIdx, regex, profileName]
-//
-// version 2 = packed format (version 1 = old verbose JSON, still decoded for back-compat)
-//
-// bitmask bit positions (LSB = bit 0):
-//   0  t17            1  vaal           2  implicit       3  any
-//   4  mapsInclude    5  mapNormal      6  mapMagic       7  mapRare
-//   8  optQty         9  optPack       10  optScarab     11  optMaps
-//  12  optCurrency   13  optRarity
-//
-// corruptedIdx: 0 = ignore, 1 = include, 2 = exclude
+// ─── Minified Export Format (version 2) ───────────────────────────────────────
+// [v, bits, qty, pack, scar, maps, curr, rar, corruptedIdx, regex, profileName]
+// bits: 0=t17 1=vaal 2=implicit 3=any 4=mapsInclude 5=mapNormal 6=mapMagic
+//       7=mapRare 8=optQty 9=optPack 10=optScarab 11=optMaps 12=optCurr 13=optRar
+// corruptedIdx: 0=ignore 1=include 2=exclude
 
-const CORRUPT_TO_IDX: Record<string, number> = {
-    'corrupted-ignore': 0, 'corrupted-include': 1, 'corrupted-exclude': 2,
-};
+const CORRUPT_TO_IDX: Record<string, number> = { 'corrupted-ignore': 0, 'corrupted-include': 1, 'corrupted-exclude': 2 };
 const CORRUPT_FROM_IDX = ['corrupted-ignore', 'corrupted-include', 'corrupted-exclude'];
 
 function packState(state: ConfigState): string {
-    const bools = [
+    const bits = [
         state.t17, state.vaal, state.implicit, state.any,
         state.mapsInclude, state.mapNormal, state.mapMagic, state.mapRare,
         state.optimizeQuantity, state.optimizePack, state.optimizeScarab,
         state.optimizeMaps, state.optimizeCurrency, state.optimizeRarity,
-    ];
-    const bits = bools.reduce((acc, b, i) => acc | (b ? 1 << i : 0), 0);
-    const packed = [
-        2, bits,
-        state.quantity, state.packSize, state.scarabs,
-        state.maps, state.currency, state.rarity,
-        CORRUPT_TO_IDX[state.corrupted] ?? 0,
-        state.regex,
-        state.profileName,
-    ];
-    return btoa(unescape(encodeURIComponent(JSON.stringify(packed))));
+    ].reduce((acc, b, i) => acc | (b ? 1 << i : 0), 0);
+    return btoa(unescape(encodeURIComponent(JSON.stringify([
+        2, bits, state.quantity, state.packSize, state.scarabs, state.maps,
+        state.currency, state.rarity, CORRUPT_TO_IDX[state.corrupted] ?? 0,
+        state.regex, state.profileName,
+    ]))));
 }
 
 function unpackState(b64: string): ConfigState | null {
     try {
         const raw = JSON.parse(decodeURIComponent(escape(atob(b64))));
-
-        // Back-compat: version 1 was a verbose JSON object
-        if (!Array.isArray(raw)) {
-            if (raw?.version === 1) return raw as ConfigState;
-            return null;
-        }
-
+        if (!Array.isArray(raw)) return (raw?.version === 1) ? raw as ConfigState : null;
         const [version, bits, qty, pack, scar, maps, curr, rar, corrIdx, regex, profileName] = raw;
         if (version !== 2) return null;
-
         const bit = (n: number) => Boolean(bits & (1 << n));
         return {
-            profileName:     typeof profileName === 'string' ? profileName : 'imported',
-            t17:             bit(0),  vaal:        bit(1),  implicit:    bit(2),  any:        bit(3),
-            mapsInclude:     bit(4),  mapNormal:   bit(5),  mapMagic:    bit(6),  mapRare:    bit(7),
-            optimizeQuantity:bit(8),  optimizePack:bit(9),  optimizeScarab:bit(10), optimizeMaps:bit(11),
-            optimizeCurrency:bit(12), optimizeRarity:bit(13),
-            corrupted:       CORRUPT_FROM_IDX[corrIdx] ?? 'corrupted-ignore',
-            quantity:        qty  ?? '',
-            packSize:        pack ?? '',
-            scarabs:         scar ?? '',
-            maps:            maps ?? '',
-            currency:        curr ?? '',
-            rarity:          rar  ?? '',
-            regex:           regex ?? '',
+            profileName:      typeof profileName === 'string' ? profileName : 'imported',
+            t17: bit(0),      vaal: bit(1),       implicit: bit(2),    any: bit(3),
+            mapsInclude: bit(4), mapNormal: bit(5), mapMagic: bit(6),  mapRare: bit(7),
+            optimizeQuantity: bit(8),  optimizePack: bit(9),  optimizeScarab: bit(10),
+            optimizeMaps: bit(11),     optimizeCurrency: bit(12),       optimizeRarity: bit(13),
+            corrupted: CORRUPT_FROM_IDX[corrIdx] ?? 'corrupted-ignore',
+            quantity: qty ?? '', packSize: pack ?? '', scarabs: scar ?? '',
+            maps: maps ?? '', currency: curr ?? '', rarity: rar ?? '', regex: regex ?? '',
         };
-    } catch {
-        return null;
-    }
+    } catch { return null; }
 }
 
 // ─── Export / Share ───────────────────────────────────────────────────────────
 
 function openExportModal(): void {
-    const state = captureState();
-    (document.getElementById('export-string') as HTMLTextAreaElement).value = packState(state);
+    (document.getElementById('export-string') as HTMLTextAreaElement).value = packState(captureState());
     (document.getElementById('export-import-string') as HTMLTextAreaElement).value = '';
     modal('export-modal', true);
 }
@@ -1107,40 +882,25 @@ function copyExportString(): void {
         const orig = btn.textContent;
         btn.textContent = 'Copied!';
         setTimeout(() => { btn.textContent = orig; }, 1500);
-    }).catch(() => {
-        ta.select();
-        document.execCommand('copy');
-    });
+    }).catch(() => { ta.select(); document.execCommand('copy'); });
 }
 
 function importFromExportString(): void {
     const ta    = document.getElementById('export-import-string') as HTMLTextAreaElement;
     const state = unpackState(ta.value.trim());
-    if (!state) {
-        alert('Invalid export string — please paste a valid export string and try again.');
-        return;
-    }
+    if (!state) { alert('Invalid export string.'); return; }
 
-    // Save as a named profile (use the name embedded in the export, but avoid
-    // silently clobbering "default" — suffix with " (imported)" if needed).
-    let profileName = state.profileName ?? 'imported';
-    if (profileName === 'default' && localStorage.getItem(PROFILE_KEY_PREFIX + 'default')) {
-        profileName = 'imported';
-    }
-    // Deduplicate: if that name already exists, append a counter
-    if (localStorage.getItem(PROFILE_KEY_PREFIX + profileName)) {
+    let name = state.profileName ?? 'imported';
+    if (name === 'default' && localStorage.getItem(PROFILE_KEY_PREFIX + 'default')) name = 'imported';
+    if (localStorage.getItem(PROFILE_KEY_PREFIX + name)) {
         let n = 2;
-        while (localStorage.getItem(PROFILE_KEY_PREFIX + `${profileName} (${n})`)) n++;
-        profileName = `${profileName} (${n})`;
+        while (localStorage.getItem(PROFILE_KEY_PREFIX + `${name} (${n})`)) n++;
+        name = `${name} (${n})`;
     }
-
-    state.profileName = profileName;
-    localStorage.setItem(PROFILE_KEY_PREFIX + profileName, packState(state));
-
-    // Switch to the new profile
-    activeProfile = profileName;
+    state.profileName = name;
+    localStorage.setItem(PROFILE_KEY_PREFIX + name, packState(state));
+    activeProfile = name;
     localStorage.setItem('activeProfile', activeProfile);
-
     wipe();
     applyState(state);
     modal('export-modal', false);
@@ -1156,37 +916,26 @@ function allProfileNames(): string[] {
         const key = localStorage.key(i)!;
         if (key.startsWith(PROFILE_KEY_PREFIX)) names.push(key.slice(PROFILE_KEY_PREFIX.length));
     }
-    // "default" always first, rest alphabetical
-    return names.sort((a, b) => {
-        if (a === 'default') return -1;
-        if (b === 'default') return 1;
-        return a.localeCompare(b);
-    });
+    return names.sort((a, b) => a === 'default' ? -1 : b === 'default' ? 1 : a.localeCompare(b));
 }
 
-function setActiveProfile(name: string): void {
-    activeProfile = name;
-    localStorage.setItem('activeProfile', name);
-}
+function setActiveProfile(name: string): void { activeProfile = name; localStorage.setItem('activeProfile', name); }
 
 function saveProfile(): void {
     const input = document.getElementById('profile-name-input') as HTMLInputElement;
     const name  = input.value.trim() || activeProfile;
-    const state = captureState(name);
-    localStorage.setItem(PROFILE_KEY_PREFIX + name, packState(state));
+    localStorage.setItem(PROFILE_KEY_PREFIX + name, packState(captureState(name)));
     setActiveProfile(name);
     input.value = '';
     renderProfileList();
 }
 
 function loadProfile(name: string): void {
-    const raw   = localStorage.getItem(PROFILE_KEY_PREFIX + name);
+    const raw = localStorage.getItem(PROFILE_KEY_PREFIX + name);
     if (!raw) return;
     const state = unpackState(raw);
-    if (!state) { alert('Profile data is corrupted and cannot be loaded.'); return; }
-    wipe();
-    applyState(state);
-    setActiveProfile(name);
+    if (!state) { alert('Profile data is corrupted.'); return; }
+    wipe(); applyState(state); setActiveProfile(name);
     modal('profiles-modal', false);
 }
 
@@ -1201,19 +950,16 @@ function deleteProfile(name: string): void {
 function renderProfileList(): void {
     const list = document.getElementById('profile-list')!;
     list.innerHTML = '';
-
     const names = allProfileNames();
-    if (names.length === 0) {
+    if (!names.length) {
         const empty = document.createElement('span');
         empty.textContent = 'No profiles saved yet.';
         empty.style.cssText = 'opacity:.5;font-size:14px;padding:4px 0';
         list.appendChild(empty);
         return;
     }
-
     for (const name of names) {
         const isActive = name === activeProfile;
-
         const row = document.createElement('div');
         row.style.cssText = 'display:flex;gap:6px;align-items:center';
 
@@ -1235,9 +981,7 @@ function renderProfileList(): void {
         delBtn.title = name === 'default' ? 'Cannot delete default profile' : `Delete "${name}"`;
         delBtn.addEventListener('click', () => deleteProfile(name));
 
-        row.appendChild(label);
-        row.appendChild(loadBtn);
-        row.appendChild(delBtn);
+        row.appendChild(label); row.appendChild(loadBtn); row.appendChild(delBtn);
         list.appendChild(row);
     }
 }
