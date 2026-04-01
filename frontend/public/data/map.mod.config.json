@@ -52,7 +52,7 @@
   "default": [
     {
       "groups": ["MapBloodlinesModOnMagics"],
-      "text": "(#-#)% increased Magic Monsters",
+      "text": "#% increased Magic Monsters",
       "generation_type": "suffix",
       "tags": [
         "QUANTITY",
@@ -78,7 +78,7 @@
     },
     {
       "groups": ["UniqueWatchstoneAdditionalElderMonsters"],
-      "text": "Area contains (#-#) additional packs of Elder Fiends",
+      "text": "Area contains # additional packs of Elder Fiends",
       "generation_type": "unique",
       "tags": []
     },
@@ -158,7 +158,7 @@
     },
     {
       "groups": ["UniqueWatchstoneAdditionalShaperMonsters"],
-      "text": "Area contains (#-#) additional packs of Shaper Creations",
+      "text": "Area contains # additional packs of Shaper Creations",
       "generation_type": "unique",
       "tags": []
     },
@@ -240,9 +240,8 @@
     },
     {
       "groups": ["UniqueWatchstoneMapPackSize"],
-      "text": "(#-#)% increased Pack size",
       "generation_type": "unique",
-      "tags": []
+      "tags": ["PACKSIZE"]
     },
     {
       "groups": ["MapMonstersEnduranceChargeOnHit"],
@@ -262,7 +261,7 @@
     },
     {
       "groups": ["MapNemesisModOnRares"],
-      "text": "(#-#)% increased number of Rare Monsters",
+      "text": "#% increased number of Rare Monsters",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -272,7 +271,7 @@
     },
     {
       "groups": ["UniqueWatchstoneMonsterLifeFinal"],
-      "text": "(#-#)% more Monster Life",
+      "text": "#% more Monster Life",
       "generation_type": "unique",
       "tags": []
     },
@@ -284,7 +283,7 @@
     },
     {
       "groups": ["MapCorruptionRandomScarab"],
-      "text": "Area has (#-#) additional random Scarab effects",
+      "text": "Area has # additional random Scarab effects",
       "generation_type": "corrupted",
       "tags": []
     },
@@ -360,7 +359,7 @@
     },
     {
       "groups": ["UniqueWatchstoneAdditionalElderMonsters"],
-      "text": "Area contains (#-#) additional packs of Elder Fiends",
+      "text": "Area contains # additional packs of Elder Fiends",
       "generation_type": "unique",
       "tags": []
     },
@@ -468,7 +467,7 @@
     },
     {
       "groups": ["UniqueWatchstoneMonsterDamageFinal"],
-      "text": "(#-#)% more Monster Damage",
+      "text": "#% more Monster Damage",
       "generation_type": "unique",
       "tags": []
     },
@@ -504,7 +503,7 @@
     },
     {
       "groups": ["UniqueWatchstoneAdditionalShaperMonsters"],
-      "text": "Area contains (#-#) additional packs of Shaper Creations",
+      "text": "Area contains # additional packs of Shaper Creations",
       "generation_type": "unique",
       "tags": []
     },
@@ -564,7 +563,7 @@
     },
     {
       "groups": ["MapCorruptionRandomAtlasNotables"],
-      "text": "Area is affected by (#-#) additional random Unallocated Notable Atlas Passives",
+      "text": "Area is affected by # additional random Unallocated Notable Atlas Passives",
       "generation_type": "corrupted",
       "tags": []
     },
@@ -624,7 +623,7 @@
     },
     {
       "groups": ["MapCorruptionAtlasEffect"],
-      "text": "Atlas Passives have (#-#)% increased Effect on Area",
+      "text": "Atlas Passives have #% increased Effect on Area",
       "generation_type": "corrupted",
       "tags": []
     }
@@ -662,7 +661,7 @@
     },
     {
       "groups": ["MapMonsterCriticalStrikesAndDamage"],
-      "text": "Monsters have (#-#)% increased Critical Strike Chance\n+(#-#)% to Monster Critical Strike Multiplier",
+      "text": "Monsters have #% increased Critical Strike Chance\n+#% to Monster Critical Strike Multiplier",
       "generation_type": "suffix",
       "tags": [
         "QUANTITY",
@@ -692,7 +691,7 @@
     },
     {
       "groups": ["MapMonsterFast"],
-      "text": "(#-#)% increased Monster Movement Speed\n(#-#)% increased Monster Attack Speed\n(#-#)% increased Monster Cast Speed",
+      "text": "#% increased Monster Movement Speed\n#% increased Monster Attack Speed\n#% increased Monster Cast Speed",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -702,7 +701,7 @@
     },
     {
       "groups": ["MapMonstersBaseSelfCriticalMultiplier"],
-      "text": "Monsters take (#-#)% reduced Extra Damage from Critical Strikes",
+      "text": "Monsters take #% reduced Extra Damage from Critical Strikes",
       "generation_type": "suffix",
       "tags": [
         "QUANTITY",
@@ -852,7 +851,7 @@
     },
     {
       "groups": ["MapMonsterCannotBeStunned"],
-      "text": "Monsters cannot be Stunned\n(#-#)% more Monster Life",
+      "text": "Monsters cannot be Stunned\n#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -882,7 +881,7 @@
     },
     {
       "groups": ["MapMonsterFireDamage"],
-      "text": "Monsters deal (#-#)% extra Physical Damage as Fire",
+      "text": "Monsters deal #% extra Physical Damage as Fire",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -892,7 +891,7 @@
     },
     {
       "groups": ["MapMonstersMaximumLifeAddedEnergyShield"],
-      "text": "Monsters gain (#-#)% of Maximum Life as Extra Maximum Energy Shield",
+      "text": "Monsters gain #% of Maximum Life as Extra Maximum Energy Shield",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -982,7 +981,7 @@
     },
     {
       "groups": ["MapMonsterLightningDamage"],
-      "text": "Monsters deal (#-#)% extra Physical Damage as Lightning",
+      "text": "Monsters deal #% extra Physical Damage as Lightning",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -992,7 +991,7 @@
     },
     {
       "groups": ["MapMonsterLife"],
-      "text": "(#-#)% more Monster Life",
+      "text": "#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1022,7 +1021,7 @@
     },
     {
       "groups": ["MapMonsterChaosDamage"],
-      "text": "Monsters gain (#-#)% of their Physical Damage as Extra Chaos Damage\nMonsters Inflict Withered for # seconds on Hit",
+      "text": "Monsters gain #% of their Physical Damage as Extra Chaos Damage\nMonsters Inflict Withered for # seconds on Hit",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1032,7 +1031,7 @@
     },
     {
       "groups": ["MapMonsterColdDamage"],
-      "text": "Monsters deal (#-#)% extra Physical Damage as Cold",
+      "text": "Monsters deal #% extra Physical Damage as Cold",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1042,7 +1041,7 @@
     },
     {
       "groups": ["MapPlayerMaxResists"],
-      "text": "Players have -(#-#)% to all maximum Resistances",
+      "text": "Players have -#% to all maximum Resistances",
       "generation_type": "suffix",
       "tags": [
         "QUANTITY",
@@ -1052,7 +1051,7 @@
     },
     {
       "groups": ["MapMonsterDamage"],
-      "text": "(#-#)% increased Monster Damage",
+      "text": "#% increased Monster Damage",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1114,7 +1113,7 @@
     },
     {
       "groups": ["MapMonsterElementalDamage"],
-      "text": "Monsters deal (#-#)% extra Physical Damage as Cold",
+      "text": "Monsters deal #% extra Physical Damage as Cold",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1144,7 +1143,7 @@
     },
     {
       "groups": ["MapMonsterCriticalStrikesAndDamage"],
-      "text": "Monsters have (#-#)% increased Critical Strike Chance\n+(#-#)% to Monster Critical Strike Multiplier",
+      "text": "Monsters have #% increased Critical Strike Chance\n+#% to Monster Critical Strike Multiplier",
       "generation_type": "suffix",
       "tags": [
         "QUANTITY",
@@ -1164,7 +1163,7 @@
     },
     {
       "groups": ["MapMonsterCannotBeStunned"],
-      "text": "Monsters cannot be Stunned\n(#-#)% more Monster Life",
+      "text": "Monsters cannot be Stunned\n#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1244,7 +1243,7 @@
     },
     {
       "groups": ["MapMonsterLife"],
-      "text": "(#-#)% more Monster Life",
+      "text": "#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1264,7 +1263,7 @@
     },
     {
       "groups": ["MapMonsterDamage"],
-      "text": "(#-#)% increased Monster Damage",
+      "text": "#% increased Monster Damage",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1274,7 +1273,7 @@
     },
     {
       "groups": ["MapMonsterElementalDamage"],
-      "text": "Monsters deal (#-#)% extra Physical Damage as Fire",
+      "text": "Monsters deal #% extra Physical Damage as Fire",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1304,7 +1303,7 @@
     },
     {
       "groups": ["MapMonsterElementalDamage"],
-      "text": "Monsters deal (#-#)% extra Physical Damage as Lightning",
+      "text": "Monsters deal #% extra Physical Damage as Lightning",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1364,7 +1363,7 @@
     },
     {
       "groups": ["MapMonsterFast"],
-      "text": "(#-#)% increased Monster Movement Speed\n(#-#)% increased Monster Attack Speed\n(#-#)% increased Monster Cast Speed",
+      "text": "#% increased Monster Movement Speed\n#% increased Monster Attack Speed\n#% increased Monster Cast Speed",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1374,7 +1373,7 @@
     },
     {
       "groups": ["MapMonstersMaximumLifeAddedEnergyShield"],
-      "text": "Monsters gain (#-#)% of Maximum Life as Extra Maximum Energy Shield",
+      "text": "Monsters gain #% of Maximum Life as Extra Maximum Energy Shield",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1424,7 +1423,7 @@
     },
     {
       "groups": ["MapMonstersBaseSelfCriticalMultiplier"],
-      "text": "Monsters take (#-#)% reduced Extra Damage from Critical Strikes",
+      "text": "Monsters take #% reduced Extra Damage from Critical Strikes",
       "generation_type": "suffix",
       "tags": [
         "QUANTITY",
@@ -1640,7 +1639,7 @@
     },
     {
       "groups": ["MapMonsterDamage"],
-      "text": "(#-#)% increased Monster Damage",
+      "text": "#% increased Monster Damage",
       "generation_type": "prefix",
       "tags": [
         "PACKSIZE",
@@ -1650,7 +1649,7 @@
     },
     {
       "groups": ["MapMonsterChaosDamage"],
-      "text": "Monsters gain (#-#)% of their Physical Damage as Extra Chaos Damage",
+      "text": "Monsters gain #% of their Physical Damage as Extra Chaos Damage",
       "generation_type": "prefix",
       "tags": [
         "PACKSIZE",
@@ -1670,7 +1669,7 @@
     },
     {
       "groups": ["MapUberModDamageAsElemental"],
-      "text": "Monsters gain (#-#)% of their Physical Damage as Extra Damage of a random Element",
+      "text": "Monsters gain #% of their Physical Damage as Extra Damage of a random Element",
       "generation_type": "prefix",
       "tags": [
         "PACKSIZE",
@@ -1713,7 +1712,7 @@
     },
     {
       "groups": ["MapMonsterLifeLeechImmunity"],
-      "text": "Players have (#-#)% reduced Maximum total Life, Mana and Energy Shield Recovery per second from Leech",
+      "text": "Players have #% reduced Maximum total Life, Mana and Energy Shield Recovery per second from Leech",
       "generation_type": "suffix",
       "tags": [
         "PACKSIZE",
@@ -1733,7 +1732,7 @@
     },
     {
       "groups": ["MapMonstersBaseSelfCriticalMultiplier"],
-      "text": "Monsters take (#-#)% reduced Extra Damage from Critical Strikes",
+      "text": "Monsters take #% reduced Extra Damage from Critical Strikes",
       "generation_type": "suffix",
       "tags": [
         "PACKSIZE",
@@ -1766,7 +1765,7 @@
     },
     {
       "groups": ["MapRareMonsters"],
-      "text": "Rare Monsters each have # additional Modifier\n(#-#)% increased number of Rare Monsters",
+      "text": "Rare Monsters each have # additional Modifier\n#% increased number of Rare Monsters",
       "generation_type": "prefix",
       "tags": [
         "PACKSIZE",
@@ -1790,7 +1789,7 @@
     },
     {
       "groups": ["MapMonsterLife"],
-      "text": "(#-#)% more Monster Life",
+      "text": "#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
         "CURRENCY",
@@ -1801,7 +1800,7 @@
     },
     {
       "groups": ["MapUberModGlobalDefences"],
-      "text": "Players have (#-#)% less Defences",
+      "text": "Players have #% less Defences",
       "generation_type": "suffix",
       "tags": [
         "PACKSIZE",
@@ -1833,7 +1832,7 @@
     },
     {
       "groups": ["MapTurbo"],
-      "text": "(#-#)% increased Monster Cast Speed\n(#-#)% increased Monster Attack Speed\n(#-#)% increased Monster Movement Speed",
+      "text": "#% increased Monster Cast Speed\n#% increased Monster Attack Speed\n#% increased Monster Movement Speed",
       "generation_type": "prefix",
       "tags": [
         "PACKSIZE",
@@ -1843,7 +1842,7 @@
     },
     {
       "groups": ["MapMonstersMaximumLifeAddedEnergyShield"],
-      "text": "Monsters gain (#-#)% of Maximum Life as Extra Maximum Energy Shield",
+      "text": "Monsters gain #% of Maximum Life as Extra Maximum Energy Shield",
       "generation_type": "prefix",
       "tags": [
         "MAPS",
@@ -1864,7 +1863,7 @@
     },
     {
       "groups": ["MapPlayersAoERadius"],
-      "text": "Players have (#-#)% less Area of Effect",
+      "text": "Players have #% less Area of Effect",
       "generation_type": "suffix",
       "tags": [
         "PACKSIZE",
@@ -1894,7 +1893,7 @@
     },
     {
       "groups": ["MapMonsterCriticalStrikesAndDamage"],
-      "text": "+(#-#)% to Monster Critical Strike Multiplier\nMonsters have (#-#)% increased Critical Strike Chance",
+      "text": "+#% to Monster Critical Strike Multiplier\nMonsters have #% increased Critical Strike Chance",
       "generation_type": "suffix",
       "tags": [
         "PACKSIZE",
@@ -1960,7 +1959,7 @@
   "mid_tier_map": [
     {
       "groups": ["MapMonsterLightningDamage"],
-      "text": "Monsters deal (#-#)% extra Physical Damage as Lightning",
+      "text": "Monsters deal #% extra Physical Damage as Lightning",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1970,7 +1969,7 @@
     },
     {
       "groups": ["MapMonsterFireDamage"],
-      "text": "Monsters deal (#-#)% extra Physical Damage as Fire",
+      "text": "Monsters deal #% extra Physical Damage as Fire",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -2070,7 +2069,7 @@
     },
     {
       "groups": ["MapPlayerMaxResists"],
-      "text": "Players have -(#-#)% to all maximum Resistances",
+      "text": "Players have -#% to all maximum Resistances",
       "generation_type": "suffix",
       "tags": [
         "QUANTITY",
@@ -2130,7 +2129,7 @@
     },
     {
       "groups": ["MapMonsterLife"],
-      "text": "(#-#)% more Monster Life",
+      "text": "#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -2170,7 +2169,7 @@
     },
     {
       "groups": ["MapMonstersMaximumLifeAddedEnergyShield"],
-      "text": "Monsters gain (#-#)% of Maximum Life as Extra Maximum Energy Shield",
+      "text": "Monsters gain #% of Maximum Life as Extra Maximum Energy Shield",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -2220,7 +2219,7 @@
     },
     {
       "groups": ["MapMonsterDamage"],
-      "text": "(#-#)% increased Monster Damage",
+      "text": "#% increased Monster Damage",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -2240,7 +2239,7 @@
     },
     {
       "groups": ["MapMonsterCriticalStrikesAndDamage"],
-      "text": "Monsters have (#-#)% increased Critical Strike Chance\n+(#-#)% to Monster Critical Strike Multiplier",
+      "text": "Monsters have #% increased Critical Strike Chance\n+#% to Monster Critical Strike Multiplier",
       "generation_type": "suffix",
       "tags": [
         "QUANTITY",
@@ -2260,7 +2259,7 @@
     },
     {
       "groups": ["MapMonsterColdDamage"],
-      "text": "Monsters deal (#-#)% extra Physical Damage as Cold",
+      "text": "Monsters deal #% extra Physical Damage as Cold",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -2300,7 +2299,7 @@
     },
     {
       "groups": ["MapMonstersBaseSelfCriticalMultiplier"],
-      "text": "Monsters take (#-#)% reduced Extra Damage from Critical Strikes",
+      "text": "Monsters take #% reduced Extra Damage from Critical Strikes",
       "generation_type": "suffix",
       "tags": [
         "QUANTITY",
@@ -2310,7 +2309,7 @@
     },
     {
       "groups": ["MapMonsterChaosDamage"],
-      "text": "Monsters gain (#-#)% of their Physical Damage as Extra Chaos Damage\nMonsters Inflict Withered for # seconds on Hit",
+      "text": "Monsters gain #% of their Physical Damage as Extra Chaos Damage\nMonsters Inflict Withered for # seconds on Hit",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -2330,7 +2329,7 @@
     },
     {
       "groups": ["MapMonsterFast"],
-      "text": "(#-#)% increased Monster Movement Speed\n(#-#)% increased Monster Attack Speed\n(#-#)% increased Monster Cast Speed",
+      "text": "#% increased Monster Movement Speed\n#% increased Monster Attack Speed\n#% increased Monster Cast Speed",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -2350,7 +2349,7 @@
     },
     {
       "groups": ["MapMonsterCannotBeStunned"],
-      "text": "Monsters cannot be Stunned\n(#-#)% more Monster Life",
+      "text": "Monsters cannot be Stunned\n#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
