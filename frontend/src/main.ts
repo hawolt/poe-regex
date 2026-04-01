@@ -3,7 +3,7 @@ import {ModifierType} from "./ModifierType";
 import {FilterModifierAny} from "./FilterModifierAny";
 import {FilterModifierAll} from "./FilterModifierAll";
 import {Blacklist} from "./Blacklist";
-import {associations} from "./Global";
+import {associations, lineRelations} from "./Global";
 import {MapAssociation} from "./MapAssociation";
 import {generateRegularExpression} from "./MinNumRegex";
 
@@ -40,9 +40,37 @@ document.addEventListener('DOMContentLoaded', () => {
 // ─── Loading ──────────────────────────────────────────────────────────────────
 
 async function loadModifiers(): Promise<void> {
-    const response = await fetch("./data/map.mod.config.json");
-    if (!response.ok) throw new Error(`Failed to load map.mod.config.json: ${response.status}`);
-    buildModifiers(await response.json());
+    // Load mod data and fallback config in parallel
+    const [modJson, fallbackText] = await Promise.all([
+        fetch("./data/map.mod.config.json").then(r => {
+            if (!r.ok) throw new Error(`Failed to load map.mod.config.json: ${r.status}`);
+            return r.json();
+        }),
+        fetch("./data/map.fallback.config").then(r => {
+            if (!r.ok) throw new Error(`Failed to load map.fallback.config: ${r.status}`);
+            return r.text();
+        }),
+    ]);
+
+    // Parse fallback config: "modText=fallbackString" per line, # lines are comments.
+    // For multiline mod texts, use literal \n in the key, e.g.:
+    //   Monsters cannot be Stunned\n(#-#)% more Monster Life=Stunned
+    const fallbacks = new Map<string, string>();
+    for (const raw of fallbackText.split("\n")) {
+        const line = raw.trim();
+        if (!line || line.startsWith('#')) continue;
+        const eq = line.indexOf('=');
+        if (eq === -1) continue;
+        const key = line.substring(0, eq).trim();
+        const fb  = line.substring(eq + 1).trim();
+        if (key.length > 0 && fb.length > 0) {
+            fallbacks.set(key, fb);
+            console.log(`[fallback] "${key}" → "${fb}"`);
+        }
+    }
+    console.log(`[fallback] loaded ${fallbacks.size} manual fallback(s)`);
+
+    buildModifiers(modJson, fallbacks);
 }
 
 async function readText(urls: string[]): Promise<string[]> {
@@ -61,9 +89,10 @@ function initBlacklist(files: string[]): Blacklist {
     return bl;
 }
 
+
 // ─── Build ────────────────────────────────────────────────────────────────────
 
-function buildModifiers(config: Record<string, any[]>): void {
+function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, string>): void {
     interface FlatEntry {
         text: string;
         groups: string[];
@@ -73,7 +102,8 @@ function buildModifiers(config: Record<string, any[]>): void {
     }
 
     const flatEntries: FlatEntry[] = [];
-    const regularTexts = new Set<string>();
+    const regularTexts  = new Set<string>();
+    const implicitTexts = new Set<string>();
 
     for (const key of TIER_KEY_ORDER) {
         const section: any[] = config[key] ?? [];
@@ -81,13 +111,16 @@ function buildModifiers(config: Record<string, any[]>): void {
         const isImplicit = key === "implicit";
 
         for (const entry of section) {
-            const text: string = (entry.text ?? "").trim();
+            const text: string = (entry.text ?? "").trim().replace(/\n/g, '\\n');
             if (!text) continue;
             const isVaal = entry.generation_type === "corrupted";
 
             if (isT17) {
                 if (regularTexts.has(text)) continue;
-            } else if (!isImplicit) {
+            } else if (isImplicit) {
+                if (implicitTexts.has(text)) continue;
+                implicitTexts.add(text);
+            } else {
                 if (regularTexts.has(text)) continue;
                 regularTexts.add(text);
             }
@@ -105,7 +138,7 @@ function buildModifiers(config: Record<string, any[]>): void {
         }
     }
 
-    // Populate global associations
+    // Populate global associations (group-based)
     const assocMap = new Map<number, Set<number>>();
     for (const [, indices] of groupToIndices) {
         if (indices.length < 2) continue;
@@ -120,14 +153,44 @@ function buildModifiers(config: Record<string, any[]>): void {
     associations.length = 0;
     for (const [idx, related] of assocMap) associations.push([idx, Array.from(related)]);
 
+    // Populate global lineRelations (line-intersection-based)
+    // Any two mods that share at least one identical line of text are linked.
+    // This catches supermods that bundle lines from multiple mods without sharing any group tag,
+    // e.g. "(#-#)% more Monster Life" and "Monsters cannot be Stunned\n(#-#)% more Monster Life".
+    lineRelations.clear();
+    const addLineRelation = (a: number, b: number) => {
+        if (!lineRelations.has(a)) lineRelations.set(a, new Set());
+        if (!lineRelations.has(b)) lineRelations.set(b, new Set());
+        lineRelations.get(a)!.add(b);
+        lineRelations.get(b)!.add(a);
+    };
+    const lineToIndices = new Map<string, number[]>();
+    for (let i = 0; i < flatEntries.length; i++) {
+        for (const line of flatEntries[i].text.toLowerCase().split('\\n').map(l => l.trim())) {
+            if (!line) continue;
+            if (!lineToIndices.has(line)) lineToIndices.set(line, []);
+            lineToIndices.get(line)!.push(i);
+        }
+    }
+    for (const [, indices] of lineToIndices) {
+        if (indices.length < 2) continue;
+        for (const a of indices) {
+            for (const b of indices) {
+                if (a !== b) addLineRelation(a, b);
+            }
+        }
+    }
+
     const regularEntries:  { idx: number }[] = [];
     const t17Entries:      { idx: number }[] = [];
     const vaalEntries:     { idx: number }[] = [];
     const implicitEntries: { idx: number }[] = [];
 
     for (let i = 0; i < flatEntries.length; i++) {
-        const e = flatEntries[i];
-        const mod = new Modifier(e.text, i, e.groups, true, e.t17, e.vaal, e.implicit);
+        const e  = flatEntries[i];
+        // Look up fallback by the mod's exact text — stable across regenerations
+        const fb = fallbacks.get(e.text) ?? null;
+        const mod = new Modifier(e.text, i, e.groups, true, e.t17, e.vaal, e.implicit, fb);
         modifiers.push(mod);
         if (e.implicit)  implicitEntries.push({ idx: i });
         else if (e.vaal) vaalEntries.push({ idx: i });
@@ -135,7 +198,7 @@ function buildModifiers(config: Record<string, any[]>): void {
         else             regularEntries.push({ idx: i });
     }
 
-    console.log(`[buildModifiers] total=${flatEntries.length} regular=${regularEntries.length} t17=${t17Entries.length} vaal=${vaalEntries.length} implicit=${implicitEntries.length} associations=${associations.length}`);
+    console.log(`[buildModifiers] total=${flatEntries.length} regular=${regularEntries.length} t17=${t17Entries.length} vaal=${vaalEntries.length} implicit=${implicitEntries.length} associations=${associations.length} lineRelations=${lineRelations.size}`);
 
     const targets = document.querySelectorAll(".mod-container");
     for (const { idx } of regularEntries) {
@@ -225,8 +288,34 @@ function disableCounterpartContainer(index: number, active: boolean, type: Modif
 }
 
 function toggleGroupMembers(index: number, active: boolean): void {
-    const related = associations.find(([idx]) => idx === index)?.[1] ?? [];
-    for (const relatedIndex of related) {
+    const visited = new Set<number>([index]);
+    const queue   = [index];
+
+    // Line relations are only expanded for the originally clicked mod — not transitively.
+    // e.g. selecting "more Monster Life" disables "Monsters cannot be Stunned\nmore Monster Life"
+    // because it directly contains the selected line, but we do NOT then follow that mod's
+    // line connections further, as those mods (e.g. the 3-line supermod) do not contain
+    // "more Monster Life" and are unrelated to the selection.
+    const lineRelatedOfOrigin = lineRelations.get(index) ?? new Set<number>();
+    for (const r of lineRelatedOfOrigin) {
+        if (!visited.has(r)) { visited.add(r); queue.push(r); }
+    }
+
+    // Group associations are still expanded transitively via the queue,
+    // but line relations are only read for the origin — not for discovered mods.
+    while (queue.length > 0) {
+        const current = queue.shift()!;
+
+        const groupRelated = associations.find(([idx]) => idx === current)?.[1] ?? [];
+        for (const r of groupRelated) {
+            if (!visited.has(r)) { visited.add(r); queue.push(r); }
+        }
+
+        // Intentionally do NOT follow lineRelations for discovered mods here.
+    }
+
+    for (const relatedIndex of visited) {
+        if (relatedIndex === index) continue;
         for (const typeStr of ['exclusive', 'inclusive']) {
             const el = document.querySelector(`#${typeStr} .selectable[data-mod="${relatedIndex}"]`);
             if (el) el.classList.toggle('disabled-item', active);
@@ -314,19 +403,15 @@ function restoreSelectionsFromRegex(savedRegex: string): void {
             child.classList.toggle('selected-item');
             const active = child.classList.contains('selected-item');
             const type   = containerId === 'exclusive' ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE;
-            disableCounterpartContainer(i, active, type, modifier);
+            disableCounterpartContainer(modIndex, active, type, modifier);
             handleModifierSelection(active, (type === ModifierType.EXCLUSIVE ? exclusive : inclusive), modifier);
-            toggleGroupMembers(i, active);
+            toggleGroupMembers(modIndex, active);
         }
     }
 }
 
 // ─── Regex Generation ─────────────────────────────────────────────────────────
 
-/**
- * Rolls back the most recently added mod from both the array and the DOM.
- * Called when generation fails so the UI doesn't get stuck.
- */
 function rollbackLastMod(type: ModifierType): void {
     const array = type === ModifierType.EXCLUSIVE ? exclusive : inclusive;
     if (array.length === 0) return;
@@ -413,7 +498,7 @@ function generate(): void {
 }
 
 function construct(): void {
-    if (!(document.getElementById('optimize') as HTMLInputElement).checked) return;
+    if ((document.getElementById('optimize') as HTMLInputElement).checked) return;
     generate();
 }
 
@@ -534,6 +619,7 @@ function modal(id: string, status: boolean): void {
 
 function tracker(): void {
     console.log(`build-time ${(performance.now() - call).toFixed(1)}ms`);
+    //debugSanityCheck();
 }
 
 function exceptional(error: any): void {
@@ -550,7 +636,7 @@ function toggle(attribute: string, selected: boolean): void {
 }
 
 function filter(element: HTMLElement): void {
-    const query     = (element as HTMLInputElement).value.toLowerCase();
+    const query     = (element as HTMLInputElement).value;
     const container = element.closest('.container-search')?.nextElementSibling as HTMLElement;
     if (!container?.classList.contains('mod-container')) return;
 
@@ -558,9 +644,25 @@ function filter(element: HTMLElement): void {
     const vaalEl     = document.getElementById('vaal')     as HTMLInputElement;
     const implicitEl = document.getElementById('implicit') as HTMLInputElement;
 
+    // Try to compile the query as a regex. If invalid, fall back to plain substring match.
+    // Matching is case-insensitive and uses the full mod text with real newlines so that
+    // anchors like $ and ^ apply to the whole string, not per-line.
+    let re: RegExp | null = null;
+    if (query.length > 0) {
+        try {
+            re = new RegExp(query, 'i');
+        } catch {
+            // Invalid regex — fall back to literal substring match
+            re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        }
+    }
+
     for (const child of Array.from(container.children) as HTMLElement[]) {
-        const text     = child.textContent?.toLowerCase() ?? '';
-        const matchesQ = text.includes(query);
+        // Use the full mod text with real newlines for matching so $ and ^ work correctly.
+        // child.textContent already has real newlines (set via replace(/\\n/g, "\n") on creation).
+        const text = child.textContent?.toLowerCase() ?? '';
+
+        const matchesQ = re === null || re.test(text);
 
         if (!matchesQ) { child.style.display = 'none'; continue; }
 
@@ -716,4 +818,63 @@ function setup(): void {
     document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach(cb => {
         cb.addEventListener('change', () => handleCheckboxChange(cb));
     });
+}
+
+// ─── Debug: Standalone Regex Sanity Check ────────────────────────────────────
+// Runs on startup after all modifiers are loaded.
+// Tests every mod individually in both filter modes with all flags enabled,
+// and logs any mod that fails to produce a regex to the console.
+
+function debugSanityCheck(): void {
+    console.group('[sanity] standalone regex check — testing all mods individually (t17+vaal+implicit enabled)');
+
+    const emptyBlacklist = new Blacklist();
+    const results: { idx: number; t17: string; vaal: string; implicit: string; mode: string; text: string; status: string }[] = [];
+
+    for (const mod of modifiers) {
+        for (const useAny of [false, true]) {
+            const f = useAny
+                ? new FilterModifierAny(true, true, true, modifiers, emptyBlacklist, blacklist)
+                : new FilterModifierAll(true, true, true, modifiers, emptyBlacklist, blacklist);
+
+            const result = new Set<string>();
+            const assoc  = new MapAssociation();
+
+            try {
+                f.create(assoc, result, [mod], 0);
+            } catch (e) {
+                results.push({
+                    idx:      mod.getIndex(),
+                    t17:      mod.isT17()      ? '✓' : '',
+                    vaal:     mod.isVaal()     ? '✓' : '',
+                    implicit: mod.isImplicit() ? '✓' : '',
+                    mode:     useAny ? 'any' : 'all',
+                    text:     mod.getModifier().replace(/\\n/g, ' | '),
+                    status:   `THREW: ${e}`,
+                });
+                continue;
+            }
+
+            if (result.size === 0) {
+                results.push({
+                    idx:      mod.getIndex(),
+                    t17:      mod.isT17()      ? '✓' : '',
+                    vaal:     mod.isVaal()     ? '✓' : '',
+                    implicit: mod.isImplicit() ? '✓' : '',
+                    mode:     useAny ? 'any' : 'all',
+                    text:     mod.getModifier().replace(/\\n/g, ' | '),
+                    status:   'FAIL — no regex produced',
+                });
+            }
+        }
+    }
+
+    if (results.length === 0) {
+        console.log('[sanity] ✅ All mods produced a regex in both filter modes.');
+    } else {
+        console.warn(`[sanity] ⚠ ${results.length} failure(s) found:`);
+        console.table(results);
+    }
+
+    console.groupEnd();
 }

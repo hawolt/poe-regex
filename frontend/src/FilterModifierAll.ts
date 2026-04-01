@@ -32,6 +32,33 @@ export class FilterModifierAll extends Filter {
         console.log(`[All.create] called with ${required.length} required mod(s):`);
         required.forEach((m, i) => console.log(`  req[${i}]: idx=${m.getIndex()} t17=${m.isT17()} vaal=${m.isVaal()} impl=${m.isImplicit()} "${m.getModifier().substring(0, 70)}"`));
 
+        // Deduplicate: if a mod's full text appears as a line inside another mod in required,
+        // it is already covered by that larger mod and does not need its own token.
+        // e.g. required = [
+        //   "Monsters cannot be Stunned"                                    (single-line)
+        //   "Monsters cannot be Stunned\nMonsters' Action Speed cannot..."  (supermod)
+        // ]
+        // The single-line mod is fully covered by the supermod → remove it so only one
+        // token is generated (for the supermod), which matches all lines via one regex.
+        const deduplicated = required.filter(mod => {
+            const modLines = mod.getModifier().toLowerCase().split('\\n').map(l => l.trim());
+            const coveredByOther = required.some(other => {
+                if (other === mod) return false;
+                const otherLines = other.getModifier().toLowerCase().split('\\n').map(l => l.trim());
+                // 'other' covers 'mod' if every line of 'mod' appears in 'other'
+                return modLines.every(ml => otherLines.includes(ml));
+            });
+            if (coveredByOther) {
+                console.log(`[All.create]   dedup: removing idx=${mod.getIndex()} (covered by a larger mod in required) "${mod.getModifier().substring(0, 60)}"`);
+            }
+            return !coveredByOther;
+        });
+
+        if (deduplicated.length < required.length) {
+            console.log(`[All.create] dedup: ${required.length} → ${deduplicated.length} mod(s) to process`);
+            required = deduplicated;
+        }
+
         for (const modifier of required) {
             console.log(`\n[All.create] ── processing: "${modifier.getModifier().substring(0, 70)}" ──`);
 

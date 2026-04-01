@@ -35,7 +35,6 @@ export class FilterModifierAny extends Filter {
             return;
         }
 
-        // Hard cap: if we've looped more times than there are mods, something is broken
         if (failsafe > 50) {
             console.error(`[Any.create] DEADLOCK GUARD hit at failsafe=${failsafe}. Bailing out.`);
             console.error(`[Any.create] Remaining required (${required.length}):`);
@@ -66,7 +65,6 @@ export class FilterModifierAny extends Filter {
 
         const map: Map<string, number> = new Map();
         let checkedCount = 0;
-        let rejectedExclude = 0;
         let rejectedCheck = 0;
 
         const sorted = Array.from(options)
@@ -96,7 +94,6 @@ export class FilterModifierAny extends Filter {
 
         console.log(`[Any.create] checked=${checkedCount} rejectedCheck=${rejectedCheck} candidates=${map.size}`);
 
-        // sort: most coverage first, then shortest
         let entries = Array.from(map.entries());
         entries.sort((e1, e2) => {
             const diff = e2[1] - e1[1];
