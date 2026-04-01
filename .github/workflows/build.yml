@@ -6,41 +6,8 @@ on:
       - dev
 
 jobs:
-  build-map-affix-config:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev'
-    needs: build
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Download Map Modifier JSON
-      run: |
-        curl -L -o map.data.json https://poedb.tw/us/api/MapMods
-
-    - name: Build Map Affix config
-      run: |
-        jq -r '.data[].Name' map.data.json > ./public/league/settler/map.affix.config
-
-    - name: Commit and push map.affix.config
-      run: |
-        git checkout dev
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add ./public/league/settler/map.affix.config
-        if git diff --cached --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "Build: create map.affix.config"
-          git push origin dev
-        fi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev'
 
     steps:
     - name: Checkout code
@@ -56,7 +23,7 @@ jobs:
 
     - name: Build the project
       run: npm run build
-    
+
     - name: Commit and push bundle.js
       run: |
         git checkout dev
@@ -67,6 +34,76 @@ jobs:
           echo "No changes to commit"
         else
           git commit -m "Build: update bundle.js"
+          git push origin dev
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-map-affix-config:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Download Map Modifier JSON
+      run: curl -L -o map.data.json https://poedb.tw/us/api/MapMods
+
+    - name: Build map.affix.config
+      run: jq -r '.data[].Name' map.data.json > frontend/public/data/map.affix.config
+
+    - name: Commit and push map.affix.config
+      run: |
+        git checkout dev
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add frontend/public/data/map.affix.config
+        if git diff --cached --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Build: create map.affix.config"
+          git push origin dev
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-map-mod-config:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Download org.json dependency
+      run: curl -L -o org.json.jar https://repo1.maven.org/maven2/org/json/json/20240303/json-20240303.jar
+
+    - name: Compile Java
+      run: javac -cp org.json.jar java/Modifier.java java/Generator.java -d java/out
+
+    - name: Run Generator
+      run: java -cp java/out:org.json.jar Generator
+
+    - name: Move output file
+      run: mv map.mod.config.json frontend/public/data/map.mod.config.json
+
+    - name: Commit and push map.mod.config.json
+      run: |
+        git checkout dev
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add frontend/public/data/map.mod.config.json
+        if git diff --cached --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Build: create map.mod.config.json"
           git push origin dev
         fi
       env:
