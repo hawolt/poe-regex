@@ -22,6 +22,8 @@
 
 <body>
 <div id="overlay" class="hidden"></div>
+
+<!-- ── Loading modal ─────────────────────────────────────────────────────── -->
 <div id="loading-modal" class="modal hidden">
     <div class="modal-content">
         <p class="modal-headline highlight-headline">Crunching numbers</p>
@@ -29,19 +31,61 @@
         <div class="loader"></div>
     </div>
 </div>
-<div id="import-modal" class="modal hidden">
+
+<!-- ── Profiles modal ────────────────────────────────────────────────────── -->
+<div id="profiles-modal" class="modal hidden" style="width:400px">
     <div class="modal-content flex vertical">
-        <p class="modal-headline highlight-headline">Expression Import</p>
-        <span>feature in development</span>
-        <input id="import-string" type="text" class="custom-input" placeholder="paste your import string here">
-        <div class="split-view-container no-space">
-            <div class="split-view space-evenly">
-                <button id="import-load" class="styled-button close-modal">Import RegEx</button>
-                <button class="styled-button close-modal">Close</button>
-            </div>
+        <p class="modal-headline highlight-headline">Profiles</p>
+        <span style="font-size:13px;opacity:.7;margin-bottom:10px">
+            Save your current selections as a named profile and reload them later.
+        </span>
+        <div class="split-view" style="gap:6px;margin-bottom:12px;align-items:center">
+            <input id="profile-name-input" type="text" class="custom-input"
+                   placeholder="Profile name…"
+                   style="flex:1;padding:6px 10px;font-size:15px">
+            <button id="profile-save" class="styled-button" style="padding:8px 18px;font-size:14px;white-space:nowrap">
+                Save
+            </button>
+        </div>
+        <div id="profile-list"
+             style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;margin-bottom:14px;min-height:32px">
+            <!-- populated by JS -->
+        </div>
+        <button class="styled-button close-modal" style="width:100%">Close</button>
+    </div>
+</div>
+
+<!-- ── Export / Share modal ──────────────────────────────────────────────── -->
+<div id="export-modal" class="modal hidden" style="width:440px">
+    <div class="modal-content flex vertical">
+        <p class="modal-headline highlight-headline">Export / Import Config</p>
+        <span style="font-size:13px;opacity:.7;margin-bottom:8px">
+            Your entire configuration, just copy & share
+        </span>
+        <textarea id="export-string" class="custom-input"
+                  style="width:100%;height:80px;resize:vertical;padding:8px;font-size:11px;
+                         font-family:monospace;box-sizing:border-box;word-break:break-all"
+                  placeholder="Export string will appear here…" readonly></textarea>
+        <div class="split-view" style="gap:8px;margin-top:8px">
+            <button id="export-copy" class="styled-button" style="flex:1">Copy to Clipboard</button>
+        </div>
+
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,.15);width:100%;margin:16px 0 10px">
+
+        <span style="font-size:13px;opacity:.7;margin-bottom:8px">
+            Paste an export string below to import a configuration:
+        </span>
+        <textarea id="export-import-string" class="custom-input"
+                  style="width:100%;height:60px;resize:vertical;padding:8px;font-size:11px;
+                         font-family:monospace;box-sizing:border-box;word-break:break-all"
+                  placeholder="Paste export string here…"></textarea>
+        <div class="split-view" style="gap:8px;margin-top:8px">
+            <button id="export-import-load" class="styled-button" style="flex:1">Import Configuration</button>
+            <button class="styled-button close-modal" style="flex:1">Close</button>
         </div>
     </div>
 </div>
+
 <div id="wrapper">
     <div class="split-view side-margin">
         <div id="headline">
@@ -59,23 +103,27 @@
         </div>
     </div>
     <p style="margin: 10px 10px;font-style: italic">This website is under active development</p>
+
+    <!-- ── Sticky two-row bar ─────────────────────────────────────────────── -->
     <div id="result">
-        <div class="split-view consume-all">
-            <div class="split-view-container display">
-                <div id="regex" class="grid-content"></div>
-                <div id="hint" class="regex-hint grid-content"></div>
-            </div>
-            <div class="split-view-container display align-right">
-                <div class="split-view">
-                    <button id="copy" class="styled-button side-margin">Copy to Clipboard</button>
-                    <button id="generate" class="styled-button side-margin">Generate</button>
-                    <!--<button id="import" class="styled-button side-margin">Import</button>-->
-                    <button id="clear" class="styled-button side-margin">Clear</button>
-                    <button id="reset" class="styled-button side-margin">Reset</button>
-                </div>
+        <!-- Row 1: regex output + hint -->
+        <div id="result-regex-row">
+            <div id="regex"></div>
+            <div id="hint" class="regex-hint"></div>
+        </div>
+        <!-- Row 2: action buttons, slightly darker -->
+        <div id="result-button-row">
+            <div class="split-view" style="margin-left:auto">
+                <button id="copy"     class="styled-button side-margin">Copy to Clipboard</button>
+                <button id="generate" class="styled-button side-margin">Generate</button>
+                <button id="export"   class="styled-button side-margin">Share / Import</button>
+                <button id="profiles" class="styled-button side-margin">Profiles</button>
+                <button id="clear"    class="styled-button side-margin">Clear</button>
+                <button id="reset"    class="styled-button side-margin">Reset</button>
             </div>
         </div>
     </div>
+
     <div class="configuration">
         <div class="config">
             <span>Optimization works by rounding down your number to the nearest tenth</span>

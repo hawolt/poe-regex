@@ -19,6 +19,9 @@ let modifiers: Modifier[] = [];
 let exclusive: Modifier[] = [];
 let inclusive: Modifier[] = [];
 
+// The name of the currently active profile. Always has a value — defaults to "default".
+let activeProfile: string = "default";
+
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,8 +32,20 @@ document.addEventListener('DOMContentLoaded', () => {
         "./data/map.blacklist.config"
     ];
 
-    readText(blacklistFiles)
-        .then(responses => { blacklist = initBlacklist(responses); })
+    // map.user.affix.config is optional — silently ignore 404 so the page
+    // still loads when the file is absent or empty.
+    const userAffixP = fetch("./data/map.user.affix.config")
+        .then(r => r.ok ? r.text() : "")
+        .catch(() => "");
+
+    Promise.all([readText(blacklistFiles), userAffixP])
+        .then(([responses, userAffix]) => {
+            blacklist = initBlacklist(responses);
+            if (userAffix.trim()) {
+                blacklist.populate(userAffix.split("\n"));
+                console.log("[user-affix] loaded user affix blacklist");
+            }
+        })
         .then(() => loadModifiers())
         .then(() => setup())
         .then(() => tracker())
@@ -40,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // ─── Loading ──────────────────────────────────────────────────────────────────
 
 async function loadModifiers(): Promise<void> {
-    // Load mod data and fallback config in parallel
     const [modJson, fallbackText] = await Promise.all([
         fetch("./data/map.mod.config.json").then(r => {
             if (!r.ok) throw new Error(`Failed to load map.mod.config.json: ${r.status}`);
@@ -89,7 +103,6 @@ function initBlacklist(files: string[]): Blacklist {
     return bl;
 }
 
-
 // ─── Build ────────────────────────────────────────────────────────────────────
 
 function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, string>): void {
@@ -129,34 +142,30 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
         }
     }
 
-    // Build group → indices map
+    // Build group associations
     const groupToIndices = new Map<string, number[]>();
     for (let i = 0; i < flatEntries.length; i++) {
-        for (const group of flatEntries[i].groups) {
-            if (!groupToIndices.has(group)) groupToIndices.set(group, []);
-            groupToIndices.get(group)!.push(i);
+        for (const g of flatEntries[i].groups) {
+            if (!groupToIndices.has(g)) groupToIndices.set(g, []);
+            groupToIndices.get(g)!.push(i);
         }
     }
-
-    // Populate global associations (group-based)
     const assocMap = new Map<number, Set<number>>();
     for (const [, indices] of groupToIndices) {
         if (indices.length < 2) continue;
         for (const a of indices) {
             for (const b of indices) {
-                if (a === b) continue;
-                if (!assocMap.has(a)) assocMap.set(a, new Set());
-                assocMap.get(a)!.add(b);
+                if (a !== b) {
+                    if (!assocMap.has(a)) assocMap.set(a, new Set());
+                    assocMap.get(a)!.add(b);
+                }
             }
         }
     }
     associations.length = 0;
-    for (const [idx, related] of assocMap) associations.push([idx, Array.from(related)]);
+    for (const [e, t] of assocMap) associations.push([e, Array.from(t)]);
 
-    // Populate global lineRelations (line-intersection-based)
-    // Any two mods that share at least one identical line of text are linked.
-    // This catches supermods that bundle lines from multiple mods without sharing any group tag,
-    // e.g. "(#-#)% more Monster Life" and "Monsters cannot be Stunned\n(#-#)% more Monster Life".
+    // Build line relations
     lineRelations.clear();
     const addLineRelation = (a: number, b: number) => {
         if (!lineRelations.has(a)) lineRelations.set(a, new Set());
@@ -188,7 +197,6 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
 
     for (let i = 0; i < flatEntries.length; i++) {
         const e  = flatEntries[i];
-        // Look up fallback by the mod's exact text — stable across regenerations
         const fb = fallbacks.get(e.text) ?? null;
         const mod = new Modifier(e.text, i, e.groups, true, e.t17, e.vaal, e.implicit, fb);
         modifiers.push(mod);
@@ -254,12 +262,9 @@ function createSelectableContainer(index: number, type: ModifierType, modifier: 
         toggleGroupMembers(index, active);
 
         const optimizeChecked = (document.getElementById('optimize') as HTMLInputElement).checked;
-
         console.log(`[click] mod idx=${index} active=${active} optimize=${optimizeChecked} excl=${exclusive.length} incl=${inclusive.length}`);
 
-        if (!optimizeChecked) {
-            modal('loading-modal', true);
-        }
+        if (!optimizeChecked) modal('loading-modal', true);
         construct();
     });
 
@@ -291,27 +296,17 @@ function toggleGroupMembers(index: number, active: boolean): void {
     const visited = new Set<number>([index]);
     const queue   = [index];
 
-    // Line relations are only expanded for the originally clicked mod — not transitively.
-    // e.g. selecting "more Monster Life" disables "Monsters cannot be Stunned\nmore Monster Life"
-    // because it directly contains the selected line, but we do NOT then follow that mod's
-    // line connections further, as those mods (e.g. the 3-line supermod) do not contain
-    // "more Monster Life" and are unrelated to the selection.
     const lineRelatedOfOrigin = lineRelations.get(index) ?? new Set<number>();
     for (const r of lineRelatedOfOrigin) {
         if (!visited.has(r)) { visited.add(r); queue.push(r); }
     }
 
-    // Group associations are still expanded transitively via the queue,
-    // but line relations are only read for the origin — not for discovered mods.
     while (queue.length > 0) {
         const current = queue.shift()!;
-
         const groupRelated = associations.find(([idx]) => idx === current)?.[1] ?? [];
         for (const r of groupRelated) {
             if (!visited.has(r)) { visited.add(r); queue.push(r); }
         }
-
-        // Intentionally do NOT follow lineRelations for discovered mods here.
     }
 
     for (const relatedIndex of visited) {
@@ -326,6 +321,14 @@ function toggleGroupMembers(index: number, active: boolean): void {
 // ─── Rebuild from localStorage ────────────────────────────────────────────────
 
 function rebuild(): void {
+    // Restore the active profile name, then ensure "default" profile exists.
+    activeProfile = localStorage.getItem('activeProfile') ?? 'default';
+
+    // If the "default" profile doesn't exist yet, save current (blank) state as default now.
+    if (!localStorage.getItem(PROFILE_KEY_PREFIX + 'default')) {
+        localStorage.setItem(PROFILE_KEY_PREFIX + 'default', packState(captureState('default')));
+    }
+
     restoreCheckbox('t17',      val => toggle('t17',      val));
     restoreCheckbox('vaal',     val => toggle('vaal',     val));
     restoreCheckbox('implicit', val => toggle('implicit', val));
@@ -441,7 +444,6 @@ function generate(): void {
     setTimeout(() => {
         const any = (document.getElementById('any') as HTMLInputElement).checked;
         localStorage.setItem("any", String(any));
-
         console.log(`[generate] inside setTimeout, any=${any}`);
 
         let exclusiveExpr = "";
@@ -644,24 +646,17 @@ function filter(element: HTMLElement): void {
     const vaalEl     = document.getElementById('vaal')     as HTMLInputElement;
     const implicitEl = document.getElementById('implicit') as HTMLInputElement;
 
-    // Try to compile the query as a regex. If invalid, fall back to plain substring match.
-    // Matching is case-insensitive and uses the full mod text with real newlines so that
-    // anchors like $ and ^ apply to the whole string, not per-line.
     let re: RegExp | null = null;
     if (query.length > 0) {
         try {
             re = new RegExp(query, 'i');
         } catch {
-            // Invalid regex — fall back to literal substring match
             re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
         }
     }
 
     for (const child of Array.from(container.children) as HTMLElement[]) {
-        // Use the full mod text with real newlines for matching so $ and ^ work correctly.
-        // child.textContent already has real newlines (set via replace(/\\n/g, "\n") on creation).
         const text = child.textContent?.toLowerCase() ?? '';
-
         const matchesQ = re === null || re.test(text);
 
         if (!matchesQ) { child.style.display = 'none'; continue; }
@@ -705,55 +700,6 @@ function handleCheckboxChange(checkbox: HTMLInputElement): void {
     }
 }
 
-function parse(input: string): string[] {
-    const re = /"([^"]*)"|[^\s]+/g;
-    const results: string[] = [];
-    let match;
-    while ((match = re.exec(input)) !== null) results.push(match[1] ?? match[0]);
-    return results;
-}
-
-function toggleImplicitActive(id: string): void {
-    const el = document.getElementById(id) as HTMLInputElement;
-    el.checked = true;
-    el.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
-}
-
-function handleModImport(type: ModifierType, substring: string): void {
-    const target = type === ModifierType.EXCLUSIVE ? 'exclusive' : 'inclusive';
-    document.querySelectorAll(`#${target} .selectable`).forEach(element => {
-        if (element.textContent?.toLowerCase().includes(substring)) {
-            element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-        }
-    });
-}
-
-function handleBulkModImport(type: ModifierType, substrings: string[]): void {
-    for (const sub of substrings) handleModImport(type, sub);
-}
-
-function importExpression(): void {
-    wipe();
-    toggleImplicitActive('t17');
-    toggleImplicitActive('vaal');
-    toggleImplicitActive('implicit');
-
-    const input   = document.getElementById('import-string') as HTMLInputElement;
-    const entries = parse(input.value);
-    input.value   = '';
-
-    for (const entry of entries) {
-        if (entry.startsWith("!")) {
-            handleBulkModImport(ModifierType.EXCLUSIVE, entry.substring(1).split("|"));
-        } else if (entry.includes("|")) {
-            handleBulkModImport(ModifierType.INCLUSIVE, entry.split("|"));
-        } else {
-            handleModImport(ModifierType.INCLUSIVE, entry.startsWith('"') ? entry.slice(1, -1) : entry);
-        }
-    }
-    construct();
-}
-
 // ─── Event Setup ──────────────────────────────────────────────────────────────
 
 function setup(): void {
@@ -774,18 +720,25 @@ function setup(): void {
     document.getElementById('copy')!.addEventListener('click', () => {
         navigator.clipboard.writeText(document.getElementById('regex')!.innerText);
     });
-    document.getElementById('import')!.addEventListener('click', () => modal('import-modal', true));
     document.getElementById('generate')!.addEventListener('click', () => {
         modal('loading-modal', true);
         generate();
     });
-    document.getElementById('import-load')!.addEventListener('click', importExpression);
     document.getElementById('report')!.addEventListener('click', () => {
         window.open('https://github.com/hawolt/poe-regex/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=', '_blank');
     });
     document.getElementById('suggest')!.addEventListener('click', () => {
         window.open('https://github.com/hawolt/poe-regex/issues/new?assignees=&labels=enhancement&projects=&template=feature_request.md&title=', '_blank');
     });
+
+    document.getElementById('export')?.addEventListener('click', openExportModal);
+    document.getElementById('profiles')?.addEventListener('click', () => {
+        renderProfileList();
+        modal('profiles-modal', true);
+    });
+    document.getElementById('export-copy')?.addEventListener('click', copyExportString);
+    document.getElementById('export-import-load')?.addEventListener('click', importFromExportString);
+    document.getElementById('profile-save')?.addEventListener('click', saveProfile);
 
     document.querySelectorAll('.close-modal').forEach(el => {
         el.addEventListener('click', e => {
@@ -820,61 +773,337 @@ function setup(): void {
     });
 }
 
-// ─── Debug: Standalone Regex Sanity Check ────────────────────────────────────
-// Runs on startup after all modifiers are loaded.
-// Tests every mod individually in both filter modes with all flags enabled,
-// and logs any mod that fails to produce a regex to the console.
+// ─── Debug ────────────────────────────────────────────────────────────────────
 
 function debugSanityCheck(): void {
     console.group('[sanity] standalone regex check — testing all mods individually (t17+vaal+implicit enabled)');
-
     const emptyBlacklist = new Blacklist();
     const results: { idx: number; t17: string; vaal: string; implicit: string; mode: string; text: string; status: string }[] = [];
-
     for (const mod of modifiers) {
         for (const useAny of [false, true]) {
             const f = useAny
                 ? new FilterModifierAny(true, true, true, modifiers, emptyBlacklist, blacklist)
                 : new FilterModifierAll(true, true, true, modifiers, emptyBlacklist, blacklist);
-
             const result = new Set<string>();
             const assoc  = new MapAssociation();
-
             try {
                 f.create(assoc, result, [mod], 0);
             } catch (e) {
                 results.push({
-                    idx:      mod.getIndex(),
-                    t17:      mod.isT17()      ? '✓' : '',
-                    vaal:     mod.isVaal()     ? '✓' : '',
-                    implicit: mod.isImplicit() ? '✓' : '',
-                    mode:     useAny ? 'any' : 'all',
-                    text:     mod.getModifier().replace(/\\n/g, ' | '),
-                    status:   `THREW: ${e}`,
-                });
-                continue;
-            }
-
-            if (result.size === 0) {
-                results.push({
-                    idx:      mod.getIndex(),
-                    t17:      mod.isT17()      ? '✓' : '',
-                    vaal:     mod.isVaal()     ? '✓' : '',
-                    implicit: mod.isImplicit() ? '✓' : '',
-                    mode:     useAny ? 'any' : 'all',
-                    text:     mod.getModifier().replace(/\\n/g, ' | '),
-                    status:   'FAIL — no regex produced',
+                    idx: mod.getIndex(), t17: mod.isT17() ? '✓' : '',
+                    vaal: mod.isVaal() ? '✓' : '', implicit: mod.isImplicit() ? '✓' : '',
+                    mode: useAny ? 'any' : 'all', text: mod.getModifier().substring(0, 80), status: '✗ FAILED',
                 });
             }
         }
     }
+    if (results.length === 0) console.log('[sanity] All mods passed ✓');
+    else console.table(results);
+    console.groupEnd();
+}
 
-    if (results.length === 0) {
-        console.log('[sanity] ✅ All mods produced a regex in both filter modes.');
-    } else {
-        console.warn(`[sanity] ⚠ ${results.length} failure(s) found:`);
-        console.table(results);
+// ─── State Capture / Apply ────────────────────────────────────────────────────
+
+interface ConfigState {
+    profileName:     string;
+    t17:             boolean;
+    vaal:            boolean;
+    implicit:        boolean;
+    any:             boolean;
+    mapsInclude:     boolean;
+    mapNormal:       boolean;
+    mapMagic:        boolean;
+    mapRare:         boolean;
+    corrupted:       string;
+    quantity:        string;  optimizeQuantity: boolean;
+    packSize:        string;  optimizePack:     boolean;
+    scarabs:         string;  optimizeScarab:   boolean;
+    maps:            string;  optimizeMaps:     boolean;
+    currency:        string;  optimizeCurrency: boolean;
+    rarity:          string;  optimizeRarity:   boolean;
+    regex:           string;
+}
+
+function captureState(profileName?: string): ConfigState {
+    const g = (id: string) => document.getElementById(id) as HTMLInputElement;
+    return {
+        profileName:     profileName ?? activeProfile,
+        t17:             g('t17').checked,
+        vaal:            g('vaal').checked,
+        implicit:        g('implicit').checked,
+        any:             g('any').checked,
+        mapsInclude:     g('maps-include').checked,
+        mapNormal:       g('map-normal').checked,
+        mapMagic:        g('map-magic').checked,
+        mapRare:         g('map-rare').checked,
+        corrupted:       localStorage.getItem('corrupted') ?? 'corrupted-ignore',
+        quantity:        g('quantity').value,   optimizeQuantity: g('optimize-quantity').checked,
+        packSize:        g('pack-size').value,  optimizePack:     g('optimize-pack').checked,
+        scarabs:         g('scarabs').value,    optimizeScarab:   g('optimize-scarab').checked,
+        maps:            g('maps').value,       optimizeMaps:     g('optimize-maps').checked,
+        currency:        g('currency').value,   optimizeCurrency: g('optimize-currency').checked,
+        rarity:          g('rarity').value,     optimizeRarity:   g('optimize-rarity').checked,
+        regex:           document.getElementById('regex')!.innerText,
+    };
+}
+
+function applyState(state: ConfigState): void {
+    const setChecked = (id: string, val: boolean) => {
+        (document.getElementById(id) as HTMLInputElement).checked = val;
+    };
+    const setValue = (id: string, val: string) => {
+        (document.getElementById(id) as HTMLInputElement).value = val;
+    };
+
+    setChecked('t17',      state.t17);      toggle('t17',      state.t17);
+    setChecked('vaal',     state.vaal);     toggle('vaal',     state.vaal);
+    setChecked('implicit', state.implicit); toggle('implicit', state.implicit);
+    setChecked('any', state.any);
+    setChecked('all', !state.any);
+
+    setChecked('maps-include', state.mapsInclude);
+    setChecked('maps-exclude', !state.mapsInclude);
+    setChecked('map-normal', state.mapNormal);
+    setChecked('map-magic',  state.mapMagic);
+    setChecked('map-rare',   state.mapRare);
+
+    const corruptedEl = document.getElementById(state.corrupted) as HTMLInputElement | null;
+    if (corruptedEl) { corruptedEl.checked = true; handleCheckboxChange(corruptedEl); }
+
+    setValue('quantity',  state.quantity);  setChecked('optimize-quantity', state.optimizeQuantity);
+    setValue('pack-size', state.packSize);  setChecked('optimize-pack',     state.optimizePack);
+    setValue('scarabs',   state.scarabs);   setChecked('optimize-scarab',   state.optimizeScarab);
+    setValue('maps',      state.maps);      setChecked('optimize-maps',     state.optimizeMaps);
+    setValue('currency',  state.currency);  setChecked('optimize-currency', state.optimizeCurrency);
+    setValue('rarity',    state.rarity);    setChecked('optimize-rarity',   state.optimizeRarity);
+
+    if (state.regex) {
+        document.getElementById('regex')!.innerText = state.regex;
+        localStorage.setItem('regex', state.regex);
+        restoreSelectionsFromRegex(state.regex);
+    }
+}
+
+// ─── Minified Export Format ───────────────────────────────────────────────────
+//
+// Instead of verbose JSON, state is packed into a compact array:
+//   [version, bitmask, qty, pack, scar, maps, curr, rar, corruptedIdx, regex, profileName]
+//
+// version 2 = packed format (version 1 = old verbose JSON, still decoded for back-compat)
+//
+// bitmask bit positions (LSB = bit 0):
+//   0  t17            1  vaal           2  implicit       3  any
+//   4  mapsInclude    5  mapNormal      6  mapMagic       7  mapRare
+//   8  optQty         9  optPack       10  optScarab     11  optMaps
+//  12  optCurrency   13  optRarity
+//
+// corruptedIdx: 0 = ignore, 1 = include, 2 = exclude
+
+const CORRUPT_TO_IDX: Record<string, number> = {
+    'corrupted-ignore': 0, 'corrupted-include': 1, 'corrupted-exclude': 2,
+};
+const CORRUPT_FROM_IDX = ['corrupted-ignore', 'corrupted-include', 'corrupted-exclude'];
+
+function packState(state: ConfigState): string {
+    const bools = [
+        state.t17, state.vaal, state.implicit, state.any,
+        state.mapsInclude, state.mapNormal, state.mapMagic, state.mapRare,
+        state.optimizeQuantity, state.optimizePack, state.optimizeScarab,
+        state.optimizeMaps, state.optimizeCurrency, state.optimizeRarity,
+    ];
+    const bits = bools.reduce((acc, b, i) => acc | (b ? 1 << i : 0), 0);
+    const packed = [
+        2, bits,
+        state.quantity, state.packSize, state.scarabs,
+        state.maps, state.currency, state.rarity,
+        CORRUPT_TO_IDX[state.corrupted] ?? 0,
+        state.regex,
+        state.profileName,
+    ];
+    return btoa(unescape(encodeURIComponent(JSON.stringify(packed))));
+}
+
+function unpackState(b64: string): ConfigState | null {
+    try {
+        const raw = JSON.parse(decodeURIComponent(escape(atob(b64))));
+
+        // Back-compat: version 1 was a verbose JSON object
+        if (!Array.isArray(raw)) {
+            if (raw?.version === 1) return raw as ConfigState;
+            return null;
+        }
+
+        const [version, bits, qty, pack, scar, maps, curr, rar, corrIdx, regex, profileName] = raw;
+        if (version !== 2) return null;
+
+        const bit = (n: number) => Boolean(bits & (1 << n));
+        return {
+            profileName:     typeof profileName === 'string' ? profileName : 'imported',
+            t17:             bit(0),  vaal:        bit(1),  implicit:    bit(2),  any:        bit(3),
+            mapsInclude:     bit(4),  mapNormal:   bit(5),  mapMagic:    bit(6),  mapRare:    bit(7),
+            optimizeQuantity:bit(8),  optimizePack:bit(9),  optimizeScarab:bit(10), optimizeMaps:bit(11),
+            optimizeCurrency:bit(12), optimizeRarity:bit(13),
+            corrupted:       CORRUPT_FROM_IDX[corrIdx] ?? 'corrupted-ignore',
+            quantity:        qty  ?? '',
+            packSize:        pack ?? '',
+            scarabs:         scar ?? '',
+            maps:            maps ?? '',
+            currency:        curr ?? '',
+            rarity:          rar  ?? '',
+            regex:           regex ?? '',
+        };
+    } catch {
+        return null;
+    }
+}
+
+// ─── Export / Share ───────────────────────────────────────────────────────────
+
+function openExportModal(): void {
+    const state = captureState();
+    (document.getElementById('export-string') as HTMLTextAreaElement).value = packState(state);
+    (document.getElementById('export-import-string') as HTMLTextAreaElement).value = '';
+    modal('export-modal', true);
+}
+
+function copyExportString(): void {
+    const ta  = document.getElementById('export-string') as HTMLTextAreaElement;
+    const btn = document.getElementById('export-copy')!;
+    navigator.clipboard.writeText(ta.value).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+    }).catch(() => {
+        ta.select();
+        document.execCommand('copy');
+    });
+}
+
+function importFromExportString(): void {
+    const ta    = document.getElementById('export-import-string') as HTMLTextAreaElement;
+    const state = unpackState(ta.value.trim());
+    if (!state) {
+        alert('Invalid export string — please paste a valid export string and try again.');
+        return;
     }
 
-    console.groupEnd();
+    // Save as a named profile (use the name embedded in the export, but avoid
+    // silently clobbering "default" — suffix with " (imported)" if needed).
+    let profileName = state.profileName ?? 'imported';
+    if (profileName === 'default' && localStorage.getItem(PROFILE_KEY_PREFIX + 'default')) {
+        profileName = 'imported';
+    }
+    // Deduplicate: if that name already exists, append a counter
+    if (localStorage.getItem(PROFILE_KEY_PREFIX + profileName)) {
+        let n = 2;
+        while (localStorage.getItem(PROFILE_KEY_PREFIX + `${profileName} (${n})`)) n++;
+        profileName = `${profileName} (${n})`;
+    }
+
+    state.profileName = profileName;
+    localStorage.setItem(PROFILE_KEY_PREFIX + profileName, packState(state));
+
+    // Switch to the new profile
+    activeProfile = profileName;
+    localStorage.setItem('activeProfile', activeProfile);
+
+    wipe();
+    applyState(state);
+    modal('export-modal', false);
+}
+
+// ─── Profiles ─────────────────────────────────────────────────────────────────
+
+const PROFILE_KEY_PREFIX = 'profile::';
+
+function allProfileNames(): string[] {
+    const names: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)!;
+        if (key.startsWith(PROFILE_KEY_PREFIX)) names.push(key.slice(PROFILE_KEY_PREFIX.length));
+    }
+    // "default" always first, rest alphabetical
+    return names.sort((a, b) => {
+        if (a === 'default') return -1;
+        if (b === 'default') return 1;
+        return a.localeCompare(b);
+    });
+}
+
+function setActiveProfile(name: string): void {
+    activeProfile = name;
+    localStorage.setItem('activeProfile', name);
+}
+
+function saveProfile(): void {
+    const input = document.getElementById('profile-name-input') as HTMLInputElement;
+    const name  = input.value.trim() || activeProfile;
+    const state = captureState(name);
+    localStorage.setItem(PROFILE_KEY_PREFIX + name, packState(state));
+    setActiveProfile(name);
+    input.value = '';
+    renderProfileList();
+}
+
+function loadProfile(name: string): void {
+    const raw   = localStorage.getItem(PROFILE_KEY_PREFIX + name);
+    if (!raw) return;
+    const state = unpackState(raw);
+    if (!state) { alert('Profile data is corrupted and cannot be loaded.'); return; }
+    wipe();
+    applyState(state);
+    setActiveProfile(name);
+    modal('profiles-modal', false);
+}
+
+function deleteProfile(name: string): void {
+    if (name === 'default') { alert('The "default" profile cannot be deleted.'); return; }
+    if (!confirm(`Delete profile "${name}"?`)) return;
+    localStorage.removeItem(PROFILE_KEY_PREFIX + name);
+    if (activeProfile === name) setActiveProfile('default');
+    renderProfileList();
+}
+
+function renderProfileList(): void {
+    const list = document.getElementById('profile-list')!;
+    list.innerHTML = '';
+
+    const names = allProfileNames();
+    if (names.length === 0) {
+        const empty = document.createElement('span');
+        empty.textContent = 'No profiles saved yet.';
+        empty.style.cssText = 'opacity:.5;font-size:14px;padding:4px 0';
+        list.appendChild(empty);
+        return;
+    }
+
+    for (const name of names) {
+        const isActive = name === activeProfile;
+
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;gap:6px;align-items:center';
+
+        const label = document.createElement('span');
+        label.textContent = name + (isActive ? ' ✦' : '');
+        label.style.cssText = `flex:1;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;${isActive ? 'color:#4A90E2;font-weight:bold' : ''}`;
+
+        const loadBtn = document.createElement('button');
+        loadBtn.textContent = isActive ? 'Active' : 'Load';
+        loadBtn.className   = 'styled-button';
+        loadBtn.disabled    = isActive;
+        loadBtn.style.cssText = `padding:6px 14px;font-size:13px;flex-shrink:0;${isActive ? 'opacity:.5;cursor:default' : ''}`;
+        if (!isActive) loadBtn.addEventListener('click', () => loadProfile(name));
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '✕';
+        delBtn.className   = 'styled-button header-button';
+        delBtn.style.cssText = 'padding:6px 10px;font-size:13px;flex-shrink:0';
+        delBtn.title = name === 'default' ? 'Cannot delete default profile' : `Delete "${name}"`;
+        delBtn.addEventListener('click', () => deleteProfile(name));
+
+        row.appendChild(label);
+        row.appendChild(loadBtn);
+        row.appendChild(delBtn);
+        list.appendChild(row);
+    }
 }
