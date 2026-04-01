@@ -361,20 +361,39 @@ function disableCounterpartContainer(index: number, active: boolean, type: Modif
     }
 }
 
-function toggleGroupMembers(index: number, active: boolean): void {
+function toggleGroupMembers(index: number, active: boolean, visibilityOverride?: { t17: boolean; vaal: boolean; implicit: boolean }): void {
     const visited = new Set<number>([index]);
     const queue   = [index];
 
+    const t17Enabled      = visibilityOverride?.t17      ?? (document.getElementById('t17')      as HTMLInputElement).checked;
+    const vaalEnabled     = visibilityOverride?.vaal     ?? (document.getElementById('vaal')     as HTMLInputElement).checked;
+    const implicitEnabled = visibilityOverride?.implicit ?? (document.getElementById('implicit') as HTMLInputElement).checked;
+
+    const isVisible = (mod: Modifier): boolean => {
+        if (mod.isT17()      && !t17Enabled)     return false;
+        if (mod.isVaal()     && !vaalEnabled)     return false;
+        if (mod.isImplicit() && !implicitEnabled) return false;
+        return true;
+    };
+
     const lineRelatedOfOrigin = lineRelations.get(index) ?? new Set<number>();
     for (const r of lineRelatedOfOrigin) {
-        if (!visited.has(r)) { visited.add(r); queue.push(r); }
+        if (visited.has(r)) continue;
+        const related = modifiers[r];
+        if (related && !isVisible(related)) continue;
+        visited.add(r);
+        queue.push(r);
     }
 
     while (queue.length > 0) {
         const current = queue.shift()!;
         const groupRelated = associations.find(([idx]) => idx === current)?.[1] ?? [];
         for (const r of groupRelated) {
-            if (!visited.has(r)) { visited.add(r); queue.push(r); }
+            if (visited.has(r)) continue;
+            const related = modifiers[r];
+            if (related && !isVisible(related)) continue;
+            visited.add(r);
+            queue.push(r);
         }
     }
 
@@ -799,29 +818,38 @@ function setup(): void {
     for (const attr of ['t17', 'vaal', 'implicit'] as const) {
         document.getElementById(attr)!.addEventListener('change', e => {
             const checked = (e.target as HTMLInputElement).checked;
-            toggle(attr, checked);
-            // When a mod category is turned off, fully deselect any selected mods
-            // of that type — undoing group member disabling and counterpart disabling
-            // exactly as if the user had clicked each mod off manually.
+
             if (!checked) {
+                // Capture visibility state BEFORE toggle() hides anything,
+                // so toggleGroupMembers can traverse bridges that are about to disappear.
+                const oldVisibility = {
+                    t17:      (document.getElementById('t17')      as HTMLInputElement).checked,
+                    vaal:     (document.getElementById('vaal')     as HTMLInputElement).checked,
+                    implicit: (document.getElementById('implicit') as HTMLInputElement).checked,
+                };
+
                 const isOfType = (mod: Modifier) => {
                     if (attr === 't17'      && mod.isT17())      return true;
                     if (attr === 'vaal'     && mod.isVaal())     return true;
                     if (attr === 'implicit' && mod.isImplicit()) return true;
                     return false;
                 };
+
+                // Undo group disabling using old visibility (bridges still intact)
                 for (const [type, array] of [[ModifierType.EXCLUSIVE, exclusive], [ModifierType.INCLUSIVE, inclusive]] as const) {
                     for (const mod of array.filter(isOfType)) {
-                        // Re-enable counterpart and group members
                         disableCounterpartContainer(mod.getIndex(), false, type, mod);
-                        toggleGroupMembers(mod.getIndex(), false);
+                        toggleGroupMembers(mod.getIndex(), false, oldVisibility);
                     }
                 }
+
                 exclusive = exclusive.filter(m => !isOfType(m));
                 inclusive = inclusive.filter(m => !isOfType(m));
                 selection.clear();
                 cache.clear();
             }
+
+            toggle(attr, checked);
             construct();
         });
     }
