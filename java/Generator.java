@@ -77,7 +77,7 @@ public class Generator {
             modifier.addGroup(groups.getString(j));
         }
 
-        for (String line : entry.getString("text").replaceAll("\\d+", "#").split("\n")) {
+        for (String line : entry.getString("text").replaceAll("\\d+", "#").replaceAll("\\(#-#\\)", "#").split("\n")) {
             if (TRANSLATION.containsKey(line)) {
                 modifier.addTag(TRANSLATION.get(line));
             } else {
