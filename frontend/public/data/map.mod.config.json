@@ -51,9 +51,7 @@
   ],
   "default": [
     {
-      "groups": [
-        "MapBloodlinesModOnMagics"
-      ],
+      "groups": ["MapBloodlinesModOnMagics"],
       "text": "#% increased Magic Monsters",
       "generation_type": "suffix",
       "tags": [
@@ -63,9 +61,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area is inhabited by Cultists of Kitava",
       "generation_type": "prefix",
       "tags": [
@@ -75,25 +71,19 @@
       ]
     },
     {
-      "groups": [
-        "UniqueWatchstoneLevelDamage"
-      ],
+      "groups": ["UniqueWatchstoneLevelDamage"],
       "text": "+# to Monster Level of Area",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "UniqueWatchstoneAdditionalElderMonsters"
-      ],
+      "groups": ["UniqueWatchstoneAdditionalElderMonsters"],
       "text": "Area contains # additional packs of Elder Fiends",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonstersHinderOnHit"
-      ],
+      "groups": ["MapMonstersHinderOnHit"],
       "text": "Monsters Hinder on Hit with Spells",
       "generation_type": "suffix",
       "tags": [
@@ -103,9 +93,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area is inhabited by Solaris fanatics",
       "generation_type": "prefix",
       "tags": [
@@ -115,17 +103,13 @@
       ]
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area is inhabited by # additional Rogue Exiles",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area is inhabited by Sea Witches and their Spawn",
       "generation_type": "prefix",
       "tags": [
@@ -135,9 +119,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area is inhabited by Abominations",
       "generation_type": "prefix",
       "tags": [
@@ -147,9 +129,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area is inhabited by Humanoids",
       "generation_type": "prefix",
       "tags": [
@@ -159,49 +139,37 @@
       ]
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area contains # additional Perandus Chests\nArea has a #% chance to contain Cadiro Perandus",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapCorruptBossCorrupt"
-      ],
+      "groups": ["MapCorruptBossCorrupt"],
       "text": "Unique Monsters drop Corrupted Items",
       "generation_type": "corrupted",
       "tags": []
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area is inhabited by # additional Invasion Bosses",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "UniqueWatchstoneAdditionalShaperMonsters"
-      ],
+      "groups": ["UniqueWatchstoneAdditionalShaperMonsters"],
       "text": "Area contains # additional packs of Shaper Creations",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area can contain Mysterious Harbingers\nArea contains # additional Harbingers",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonsterMultipleProjectiles"
-      ],
+      "groups": ["MapMonsterMultipleProjectiles"],
       "text": "Monsters fire # additional Projectiles",
       "generation_type": "prefix",
       "tags": [
@@ -211,9 +179,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerElementalEquilibrium"
-      ],
+      "groups": ["MapPlayerElementalEquilibrium"],
       "text": "Players cannot inflict Exposure",
       "generation_type": "suffix",
       "tags": [
@@ -223,17 +189,13 @@
       ]
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area is inhabited by # additional Invasion Bosses",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapPoisoning"
-      ],
+      "groups": ["MapPoisoning"],
       "text": "Monsters Poison on Hit",
       "generation_type": "suffix",
       "tags": [
@@ -243,17 +205,13 @@
       ]
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area contains # additional packs with a Rare monster",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonstersPowerChargeOnHit"
-      ],
+      "groups": ["MapMonstersPowerChargeOnHit"],
       "text": "Monsters gain a Power Charge on Hit",
       "generation_type": "suffix",
       "tags": [
@@ -263,42 +221,30 @@
       ]
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area contains an additional Legion Encounter",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Slaying Enemies close together can attract monsters from Beyond this realm",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area is haunted by # additional Tormented Spirits",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "UniqueWatchstoneMapPackSize"
-      ],
+      "groups": ["UniqueWatchstoneMapPackSize"],
       "generation_type": "unique",
-      "tags": [
-        "PACKSIZE"
-      ]
+      "tags": ["PACKSIZE"]
     },
     {
-      "groups": [
-        "MapMonstersEnduranceChargeOnHit"
-      ],
+      "groups": ["MapMonstersEnduranceChargeOnHit"],
       "text": "Monsters gain an Endurance Charge on Hit",
       "generation_type": "suffix",
       "tags": [
@@ -308,17 +254,13 @@
       ]
     },
     {
-      "groups": [
-        "UniqueWatchstoneLevelModEffect"
-      ],
+      "groups": ["UniqueWatchstoneLevelModEffect"],
       "text": "+# to Monster Level of Area",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapNemesisModOnRares"
-      ],
+      "groups": ["MapNemesisModOnRares"],
       "text": "#% increased number of Rare Monsters",
       "generation_type": "prefix",
       "tags": [
@@ -328,33 +270,25 @@
       ]
     },
     {
-      "groups": [
-        "UniqueWatchstoneMonsterLifeFinal"
-      ],
+      "groups": ["UniqueWatchstoneMonsterLifeFinal"],
       "text": "#% more Monster Life",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area contains # additional Magic Monster packs",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapCorruptionRandomScarab"
-      ],
+      "groups": ["MapCorruptionRandomScarab"],
       "text": "Area has # additional random Scarab effects",
       "generation_type": "corrupted",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonstersFrenzyChargeOnHit"
-      ],
+      "groups": ["MapMonstersFrenzyChargeOnHit"],
       "text": "Monsters gain a Frenzy Charge on Hit",
       "generation_type": "suffix",
       "tags": [
@@ -364,25 +298,19 @@
       ]
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Areas can contain Abysses\nArea contains an additional Abyss",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area contains # additional packs with a Rare monster",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapTwoBosses"
-      ],
+      "groups": ["MapTwoBosses"],
       "text": "Area contains two Unique Bosses",
       "generation_type": "prefix",
       "tags": [
@@ -392,9 +320,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area is inhabited by Animals",
       "generation_type": "prefix",
       "tags": [
@@ -404,9 +330,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersStealChargesOnHit"
-      ],
+      "groups": ["MapMonstersStealChargesOnHit"],
       "text": "Monsters steal Power, Frenzy and Endurance charges on Hit",
       "generation_type": "suffix",
       "tags": [
@@ -416,41 +340,31 @@
       ]
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area can contain Breaches\nArea contains an additional unstable Breach",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "UniqueWatchstoneMapAdditionalPrefix"
-      ],
+      "groups": ["UniqueWatchstoneMapAdditionalPrefix"],
       "text": "Map has # additional random Prefix",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area contains # additional Perandus Chests\nArea has a #% chance to contain Cadiro Perandus",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "UniqueWatchstoneAdditionalElderMonsters"
-      ],
+      "groups": ["UniqueWatchstoneAdditionalElderMonsters"],
       "text": "Area contains # additional packs of Elder Fiends",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area is inhabited by Skeletons",
       "generation_type": "prefix",
       "tags": [
@@ -460,9 +374,7 @@
       ]
     },
     {
-      "groups": [
-        "MapBossPossessed"
-      ],
+      "groups": ["MapBossPossessed"],
       "text": "Unique Bosses are Possessed",
       "generation_type": "prefix",
       "tags": [
@@ -472,41 +384,31 @@
       ]
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area contains # additional Strongboxes",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Areas contain a Mirror of Delirium",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapCorruptSideArea"
-      ],
+      "groups": ["MapCorruptSideArea"],
       "text": "Contains a Vaal Side Area",
       "generation_type": "corrupted",
       "tags": []
     },
     {
-      "groups": [
-        "UniqueWatchstoneLevelLife"
-      ],
+      "groups": ["UniqueWatchstoneLevelLife"],
       "text": "+# to Monster Level of Area",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapTotems"
-      ],
+      "groups": ["MapTotems"],
       "text": "Area contains many Totems",
       "generation_type": "prefix",
       "tags": [
@@ -516,9 +418,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area is inhabited by Goatmen",
       "generation_type": "prefix",
       "tags": [
@@ -528,17 +428,13 @@
       ]
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area can contain Breaches\nArea contains # additional unstable Breaches",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area is inhabited by Undead",
       "generation_type": "prefix",
       "tags": [
@@ -548,17 +444,13 @@
       ]
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area contains # additional Magic Monster packs",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area is inhabited by Ghosts",
       "generation_type": "prefix",
       "tags": [
@@ -568,25 +460,19 @@
       ]
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area contains a Blight Encounter",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "UniqueWatchstoneMonsterDamageFinal"
-      ],
+      "groups": ["UniqueWatchstoneMonsterDamageFinal"],
       "text": "#% more Monster Damage",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonstersAllDamageAlwaysIgnites"
-      ],
+      "groups": ["MapMonstersAllDamageAlwaysIgnites"],
       "text": "All Monster Damage from Hits always Ignites",
       "generation_type": "prefix",
       "tags": [
@@ -596,9 +482,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersMaimOnHit"
-      ],
+      "groups": ["MapMonstersMaimOnHit"],
       "text": "Monsters Maim on Hit with Attacks",
       "generation_type": "suffix",
       "tags": [
@@ -608,9 +492,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area has increased monster variety",
       "generation_type": "prefix",
       "tags": [
@@ -620,17 +502,13 @@
       ]
     },
     {
-      "groups": [
-        "UniqueWatchstoneAdditionalShaperMonsters"
-      ],
+      "groups": ["UniqueWatchstoneAdditionalShaperMonsters"],
       "text": "Area contains # additional packs of Shaper Creations",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area is inhabited by Demons",
       "generation_type": "prefix",
       "tags": [
@@ -640,17 +518,13 @@
       ]
     },
     {
-      "groups": [
-        "MapCorruptVessel"
-      ],
+      "groups": ["MapCorruptVessel"],
       "text": "Area contains an additional guarded Exquisite Vaal Vessel",
       "generation_type": "corrupted",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonstersCantBeSlowedOrTaunted"
-      ],
+      "groups": ["MapMonstersCantBeSlowedOrTaunted"],
       "text": "Monsters' Action Speed cannot be modified to below Base Value\nMonsters' Movement Speed cannot be modified to below Base Value\nMonsters cannot be Taunted",
       "generation_type": "prefix",
       "tags": [
@@ -660,17 +534,13 @@
       ]
     },
     {
-      "groups": [
-        "MapCorruptSoulGainPrevention"
-      ],
+      "groups": ["MapCorruptSoulGainPrevention"],
       "text": "Players' Vaal Skills do not apply Soul Gain Prevention",
       "generation_type": "corrupted",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area is inhabited by Lunaris fanatics",
       "generation_type": "prefix",
       "tags": [
@@ -680,33 +550,25 @@
       ]
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area is haunted by # additional Tormented Spirits",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area contains Metamorph Monsters",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapCorruptionRandomAtlasNotables"
-      ],
+      "groups": ["MapCorruptionRandomAtlasNotables"],
       "text": "Area is affected by # additional random Unallocated Notable Atlas Passives",
       "generation_type": "corrupted",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonstersBlindOnHit"
-      ],
+      "groups": ["MapMonstersBlindOnHit"],
       "text": "Monsters Blind on Hit",
       "generation_type": "suffix",
       "tags": [
@@ -716,17 +578,13 @@
       ]
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area is inhabited by # additional Rogue Exiles",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonsterPacks"
-      ],
+      "groups": ["MapMonsterPacks"],
       "text": "Area is inhabited by ranged monsters",
       "generation_type": "prefix",
       "tags": [
@@ -736,33 +594,25 @@
       ]
     },
     {
-      "groups": [
-        "UniqueWatchstoneMapAdditionalSuffix"
-      ],
+      "groups": ["UniqueWatchstoneMapAdditionalSuffix"],
       "text": "Map has # additional random Suffix",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Slaying Enemies close together can attract monsters from Beyond this realm",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "EverythingEverywhere"
-      ],
+      "groups": ["EverythingEverywhere"],
       "text": "Area contains # additional Strongboxes",
       "generation_type": "unique",
       "tags": []
     },
     {
-      "groups": [
-        "MapMonsterChain"
-      ],
+      "groups": ["MapMonsterChain"],
       "text": "Monsters' skills Chain # additional times",
       "generation_type": "prefix",
       "tags": [
@@ -772,9 +622,7 @@
       ]
     },
     {
-      "groups": [
-        "MapCorruptionAtlasEffect"
-      ],
+      "groups": ["MapCorruptionAtlasEffect"],
       "text": "Atlas Passives have #% increased Effect on Area",
       "generation_type": "corrupted",
       "tags": []
@@ -782,9 +630,7 @@
   ],
   "top_tier_map": [
     {
-      "groups": [
-        "MapPlayersAoERadius"
-      ],
+      "groups": ["MapPlayersAoERadius"],
       "text": "Players have #% less Area of Effect",
       "generation_type": "suffix",
       "tags": [
@@ -794,9 +640,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerElementalWeakness"
-      ],
+      "groups": ["MapPlayerElementalWeakness"],
       "text": "Players are Cursed with Elemental Weakness",
       "generation_type": "suffix",
       "tags": [
@@ -806,9 +650,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMassiveBoss"
-      ],
+      "groups": ["MapMassiveBoss"],
       "text": "Unique Boss has #% increased Life\nUnique Boss has #% increased Area of Effect",
       "generation_type": "prefix",
       "tags": [
@@ -818,9 +660,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterCriticalStrikesAndDamage"
-      ],
+      "groups": ["MapMonsterCriticalStrikesAndDamage"],
       "text": "Monsters have #% increased Critical Strike Chance\n+#% to Monster Critical Strike Multiplier",
       "generation_type": "suffix",
       "tags": [
@@ -830,9 +670,7 @@
       ]
     },
     {
-      "groups": [
-        "MapHexproof"
-      ],
+      "groups": ["MapHexproof"],
       "text": "#% less effect of Curses on Monsters",
       "generation_type": "prefix",
       "tags": [
@@ -842,9 +680,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerCooldownRecovery"
-      ],
+      "groups": ["MapPlayerCooldownRecovery"],
       "text": "Players have #% less Cooldown Recovery Rate",
       "generation_type": "suffix",
       "tags": [
@@ -854,9 +690,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterFast"
-      ],
+      "groups": ["MapMonsterFast"],
       "text": "#% increased Monster Movement Speed\n#% increased Monster Attack Speed\n#% increased Monster Cast Speed",
       "generation_type": "prefix",
       "tags": [
@@ -866,9 +700,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersBaseSelfCriticalMultiplier"
-      ],
+      "groups": ["MapMonstersBaseSelfCriticalMultiplier"],
       "text": "Monsters take #% reduced Extra Damage from Critical Strikes",
       "generation_type": "suffix",
       "tags": [
@@ -878,9 +710,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerReducedRegen"
-      ],
+      "groups": ["MapPlayerReducedRegen"],
       "text": "Players cannot Regenerate Life, Mana or Energy Shield",
       "generation_type": "suffix",
       "tags": [
@@ -890,9 +720,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersAvoidPoisonBleedBlind"
-      ],
+      "groups": ["MapMonstersAvoidPoisonBleedBlind"],
       "text": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding",
       "generation_type": "prefix",
       "tags": [
@@ -902,9 +730,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of Consecrated Ground",
       "generation_type": "suffix",
       "tags": [
@@ -914,9 +740,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of Chilled Ground",
       "generation_type": "suffix",
       "tags": [
@@ -926,9 +750,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerAuraEffect"
-      ],
+      "groups": ["MapPlayerAuraEffect"],
       "text": "Players have #% reduced effect of Non-Curse Auras from Skills",
       "generation_type": "suffix",
       "tags": [
@@ -938,9 +760,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerReducedRegen"
-      ],
+      "groups": ["MapPlayerReducedRegen"],
       "text": "Players have #% less Recovery Rate of Life and Energy Shield",
       "generation_type": "suffix",
       "tags": [
@@ -950,9 +770,7 @@
       ]
     },
     {
-      "groups": [
-        "MapDangerousBoss"
-      ],
+      "groups": ["MapDangerousBoss"],
       "text": "Unique Boss deals #% increased Damage\nUnique Boss has #% increased Attack and Cast Speed",
       "generation_type": "prefix",
       "tags": [
@@ -962,9 +780,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterPhysicalReflection"
-      ],
+      "groups": ["MapMonsterPhysicalReflection"],
       "text": "Monsters reflect #% of Physical Damage",
       "generation_type": "prefix",
       "tags": [
@@ -974,9 +790,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayersGainReducedFlaskCharges"
-      ],
+      "groups": ["MapPlayersGainReducedFlaskCharges"],
       "text": "Players gain #% reduced Flask Charges",
       "generation_type": "suffix",
       "tags": [
@@ -986,9 +800,7 @@
       ]
     },
     {
-      "groups": [
-        "MapHexproof"
-      ],
+      "groups": ["MapHexproof"],
       "text": "Monsters are Hexproof",
       "generation_type": "prefix",
       "tags": [
@@ -998,9 +810,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerTemporalChains"
-      ],
+      "groups": ["MapPlayerTemporalChains"],
       "text": "Players are Cursed with Temporal Chains",
       "generation_type": "suffix",
       "tags": [
@@ -1010,9 +820,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerEnfeeblement"
-      ],
+      "groups": ["MapPlayerEnfeeblement"],
       "text": "Players are Cursed with Enfeeble",
       "generation_type": "suffix",
       "tags": [
@@ -1022,9 +830,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersImpaleOnHit"
-      ],
+      "groups": ["MapMonstersImpaleOnHit"],
       "text": "Monsters' Attacks have #% chance to Impale on Hit",
       "generation_type": "prefix",
       "tags": [
@@ -1034,9 +840,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersChanceToInflictStatusAilments"
-      ],
+      "groups": ["MapMonstersChanceToInflictStatusAilments"],
       "text": "Monsters have a #% chance to Ignite, Freeze and Shock on Hit",
       "generation_type": "prefix",
       "tags": [
@@ -1046,9 +850,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterCannotBeStunned"
-      ],
+      "groups": ["MapMonsterCannotBeStunned"],
       "text": "Monsters cannot be Stunned\n#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
@@ -1058,9 +860,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerBuffsExpireFaster"
-      ],
+      "groups": ["MapPlayerBuffsExpireFaster"],
       "text": "Buffs on Players expire #% faster",
       "generation_type": "suffix",
       "tags": [
@@ -1070,9 +870,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterPhysicalResistance"
-      ],
+      "groups": ["MapMonsterPhysicalResistance"],
       "text": "+#% Monster Physical Damage Reduction",
       "generation_type": "prefix",
       "tags": [
@@ -1082,9 +880,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterFireDamage"
-      ],
+      "groups": ["MapMonsterFireDamage"],
       "text": "Monsters deal #% extra Physical Damage as Fire",
       "generation_type": "prefix",
       "tags": [
@@ -1094,9 +890,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersMaximumLifeAddedEnergyShield"
-      ],
+      "groups": ["MapMonstersMaximumLifeAddedEnergyShield"],
       "text": "Monsters gain #% of Maximum Life as Extra Maximum Energy Shield",
       "generation_type": "prefix",
       "tags": [
@@ -1106,9 +900,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersAllResistances"
-      ],
+      "groups": ["MapMonstersAllResistances"],
       "text": "+#% Monster Chaos Resistance\n+#% Monster Elemental Resistances",
       "generation_type": "prefix",
       "tags": [
@@ -1118,9 +910,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of Shocked Ground which increase Damage taken by #%",
       "generation_type": "suffix",
       "tags": [
@@ -1130,9 +920,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterLifeLeechImmunity"
-      ],
+      "groups": ["MapMonsterLifeLeechImmunity"],
       "text": "Monsters cannot be Leeched from",
       "generation_type": "suffix",
       "tags": [
@@ -1142,9 +930,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterStatusAilmentImmunity"
-      ],
+      "groups": ["MapMonsterStatusAilmentImmunity"],
       "text": "Monsters have #% chance to Avoid Elemental Ailments",
       "generation_type": "suffix",
       "tags": [
@@ -1154,9 +940,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterElementalReflection"
-      ],
+      "groups": ["MapMonsterElementalReflection"],
       "text": "Monsters reflect #% of Elemental Damage",
       "generation_type": "prefix",
       "tags": [
@@ -1166,9 +950,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterAccuracyPlayersUnlockyDodge"
-      ],
+      "groups": ["MapMonsterAccuracyPlayersUnlockyDodge"],
       "text": "Players have -#% to amount of Suppressed Spell Damage Prevented\nMonsters have #% increased Accuracy Rating",
       "generation_type": "suffix",
       "tags": [
@@ -1178,9 +960,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerVulnerability"
-      ],
+      "groups": ["MapPlayerVulnerability"],
       "text": "Players are Cursed with Vulnerability",
       "generation_type": "suffix",
       "tags": [
@@ -1190,9 +970,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of desecrated ground",
       "generation_type": "suffix",
       "tags": [
@@ -1202,9 +980,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterLightningDamage"
-      ],
+      "groups": ["MapMonsterLightningDamage"],
       "text": "Monsters deal #% extra Physical Damage as Lightning",
       "generation_type": "prefix",
       "tags": [
@@ -1214,9 +990,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterLife"
-      ],
+      "groups": ["MapMonsterLife"],
       "text": "#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
@@ -1226,9 +1000,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerAccuracyRating"
-      ],
+      "groups": ["MapPlayerAccuracyRating"],
       "text": "Players have #% less Accuracy Rating",
       "generation_type": "suffix",
       "tags": [
@@ -1238,9 +1010,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersChanceToSuppressSpells"
-      ],
+      "groups": ["MapMonstersChanceToSuppressSpells"],
       "text": "Monsters have +#% chance to Suppress Spell Damage",
       "generation_type": "prefix",
       "tags": [
@@ -1250,9 +1020,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterChaosDamage"
-      ],
+      "groups": ["MapMonsterChaosDamage"],
       "text": "Monsters gain #% of their Physical Damage as Extra Chaos Damage\nMonsters Inflict Withered for # seconds on Hit",
       "generation_type": "prefix",
       "tags": [
@@ -1262,9 +1030,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterColdDamage"
-      ],
+      "groups": ["MapMonsterColdDamage"],
       "text": "Monsters deal #% extra Physical Damage as Cold",
       "generation_type": "prefix",
       "tags": [
@@ -1274,9 +1040,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerMaxResists"
-      ],
+      "groups": ["MapPlayerMaxResists"],
       "text": "Players have -#% to all maximum Resistances",
       "generation_type": "suffix",
       "tags": [
@@ -1286,9 +1050,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterDamage"
-      ],
+      "groups": ["MapMonsterDamage"],
       "text": "#% increased Monster Damage",
       "generation_type": "prefix",
       "tags": [
@@ -1298,9 +1060,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterAreaOfEffect"
-      ],
+      "groups": ["MapMonsterAreaOfEffect"],
       "text": "Monsters have #% increased Area of Effect",
       "generation_type": "suffix",
       "tags": [
@@ -1310,9 +1070,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of Burning Ground",
       "generation_type": "suffix",
       "tags": [
@@ -1322,9 +1080,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayersBlockAndArmour"
-      ],
+      "groups": ["MapPlayersBlockAndArmour"],
       "text": "Players have #% reduced Chance to Block\nPlayers have #% less Armour",
       "generation_type": "suffix",
       "tags": [
@@ -1336,9 +1092,7 @@
   ],
   "low_tier_map": [
     {
-      "groups": [
-        "MapMonsterPhysicalReflection"
-      ],
+      "groups": ["MapMonsterPhysicalReflection"],
       "text": "Monsters reflect #% of Physical Damage",
       "generation_type": "prefix",
       "tags": [
@@ -1348,9 +1102,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterPhysicalResistance"
-      ],
+      "groups": ["MapMonsterPhysicalResistance"],
       "text": "+#% Monster Physical Damage Reduction",
       "generation_type": "prefix",
       "tags": [
@@ -1360,9 +1112,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterElementalDamage"
-      ],
+      "groups": ["MapMonsterElementalDamage"],
       "text": "Monsters deal #% extra Physical Damage as Cold",
       "generation_type": "prefix",
       "tags": [
@@ -1372,9 +1122,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerBuffsExpireFaster"
-      ],
+      "groups": ["MapPlayerBuffsExpireFaster"],
       "text": "Buffs on Players expire #% faster",
       "generation_type": "suffix",
       "tags": [
@@ -1384,9 +1132,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersImpaleOnHit"
-      ],
+      "groups": ["MapMonstersImpaleOnHit"],
       "text": "Monsters' Attacks have #% chance to Impale on Hit",
       "generation_type": "prefix",
       "tags": [
@@ -1396,9 +1142,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterCriticalStrikesAndDamage"
-      ],
+      "groups": ["MapMonsterCriticalStrikesAndDamage"],
       "text": "Monsters have #% increased Critical Strike Chance\n+#% to Monster Critical Strike Multiplier",
       "generation_type": "suffix",
       "tags": [
@@ -1408,9 +1152,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayersAoERadius"
-      ],
+      "groups": ["MapPlayersAoERadius"],
       "text": "Players have #% less Area of Effect",
       "generation_type": "suffix",
       "tags": [
@@ -1420,9 +1162,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterCannotBeStunned"
-      ],
+      "groups": ["MapMonsterCannotBeStunned"],
       "text": "Monsters cannot be Stunned\n#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
@@ -1432,9 +1172,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of Chilled Ground",
       "generation_type": "suffix",
       "tags": [
@@ -1444,9 +1182,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayersGainReducedFlaskCharges"
-      ],
+      "groups": ["MapPlayersGainReducedFlaskCharges"],
       "text": "Players gain #% reduced Flask Charges",
       "generation_type": "suffix",
       "tags": [
@@ -1456,9 +1192,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterElementalReflection"
-      ],
+      "groups": ["MapMonsterElementalReflection"],
       "text": "Monsters reflect #% of Elemental Damage",
       "generation_type": "prefix",
       "tags": [
@@ -1468,9 +1202,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerCooldownRecovery"
-      ],
+      "groups": ["MapPlayerCooldownRecovery"],
       "text": "Players have #% less Cooldown Recovery Rate",
       "generation_type": "suffix",
       "tags": [
@@ -1480,9 +1212,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterAccuracyPlayersUnlockyDodge"
-      ],
+      "groups": ["MapMonsterAccuracyPlayersUnlockyDodge"],
       "text": "Players have -#% to amount of Suppressed Spell Damage Prevented\nMonsters have #% increased Accuracy Rating",
       "generation_type": "suffix",
       "tags": [
@@ -1492,9 +1222,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterAreaOfEffect"
-      ],
+      "groups": ["MapMonsterAreaOfEffect"],
       "text": "Monsters have #% increased Area of Effect",
       "generation_type": "suffix",
       "tags": [
@@ -1504,9 +1232,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of Consecrated Ground",
       "generation_type": "suffix",
       "tags": [
@@ -1516,9 +1242,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterLife"
-      ],
+      "groups": ["MapMonsterLife"],
       "text": "#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
@@ -1528,9 +1252,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerAccuracyRating"
-      ],
+      "groups": ["MapPlayerAccuracyRating"],
       "text": "Players have #% less Accuracy Rating",
       "generation_type": "suffix",
       "tags": [
@@ -1540,9 +1262,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterDamage"
-      ],
+      "groups": ["MapMonsterDamage"],
       "text": "#% increased Monster Damage",
       "generation_type": "prefix",
       "tags": [
@@ -1552,9 +1272,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterElementalDamage"
-      ],
+      "groups": ["MapMonsterElementalDamage"],
       "text": "Monsters deal #% extra Physical Damage as Fire",
       "generation_type": "prefix",
       "tags": [
@@ -1564,9 +1282,7 @@
       ]
     },
     {
-      "groups": [
-        "MapBossMod"
-      ],
+      "groups": ["MapBossMod"],
       "text": "Unique Boss deals #% increased Damage\nUnique Boss has #% increased Attack and Cast Speed",
       "generation_type": "prefix",
       "tags": [
@@ -1576,9 +1292,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersChanceToSuppressSpells"
-      ],
+      "groups": ["MapMonstersChanceToSuppressSpells"],
       "text": "Monsters have +#% chance to Suppress Spell Damage",
       "generation_type": "prefix",
       "tags": [
@@ -1588,9 +1302,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterElementalDamage"
-      ],
+      "groups": ["MapMonsterElementalDamage"],
       "text": "Monsters deal #% extra Physical Damage as Lightning",
       "generation_type": "prefix",
       "tags": [
@@ -1600,9 +1312,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of Shocked Ground which increase Damage taken by #%",
       "generation_type": "suffix",
       "tags": [
@@ -1612,9 +1322,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of desecrated ground",
       "generation_type": "suffix",
       "tags": [
@@ -1624,9 +1332,7 @@
       ]
     },
     {
-      "groups": [
-        "MapHexproof"
-      ],
+      "groups": ["MapHexproof"],
       "text": "#% less effect of Curses on Monsters",
       "generation_type": "prefix",
       "tags": [
@@ -1636,9 +1342,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterStatusAilmentImmunity"
-      ],
+      "groups": ["MapMonsterStatusAilmentImmunity"],
       "text": "Monsters have #% chance to Avoid Elemental Ailments",
       "generation_type": "suffix",
       "tags": [
@@ -1648,9 +1352,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersAllResistances"
-      ],
+      "groups": ["MapMonstersAllResistances"],
       "text": "+#% Monster Chaos Resistance\n+#% Monster Elemental Resistances",
       "generation_type": "prefix",
       "tags": [
@@ -1660,9 +1362,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterFast"
-      ],
+      "groups": ["MapMonsterFast"],
       "text": "#% increased Monster Movement Speed\n#% increased Monster Attack Speed\n#% increased Monster Cast Speed",
       "generation_type": "prefix",
       "tags": [
@@ -1672,9 +1372,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersMaximumLifeAddedEnergyShield"
-      ],
+      "groups": ["MapMonstersMaximumLifeAddedEnergyShield"],
       "text": "Monsters gain #% of Maximum Life as Extra Maximum Energy Shield",
       "generation_type": "prefix",
       "tags": [
@@ -1684,9 +1382,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerAuraEffect"
-      ],
+      "groups": ["MapPlayerAuraEffect"],
       "text": "Players have #% reduced effect of Non-Curse Auras from Skills",
       "generation_type": "suffix",
       "tags": [
@@ -1696,9 +1392,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerReducedRegen"
-      ],
+      "groups": ["MapPlayerReducedRegen"],
       "text": "Players have #% less Recovery Rate of Life and Energy Shield",
       "generation_type": "suffix",
       "tags": [
@@ -1708,9 +1402,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersAvoidPoisonBleedBlind"
-      ],
+      "groups": ["MapMonstersAvoidPoisonBleedBlind"],
       "text": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding",
       "generation_type": "prefix",
       "tags": [
@@ -1720,9 +1412,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of Burning Ground",
       "generation_type": "suffix",
       "tags": [
@@ -1732,9 +1422,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersBaseSelfCriticalMultiplier"
-      ],
+      "groups": ["MapMonstersBaseSelfCriticalMultiplier"],
       "text": "Monsters take #% reduced Extra Damage from Critical Strikes",
       "generation_type": "suffix",
       "tags": [
@@ -1744,9 +1432,7 @@
       ]
     },
     {
-      "groups": [
-        "MapBossMod"
-      ],
+      "groups": ["MapBossMod"],
       "text": "Unique Boss has #% increased Life\nUnique Boss has #% increased Area of Effect",
       "generation_type": "prefix",
       "tags": [
@@ -1756,9 +1442,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayersBlockAndArmour"
-      ],
+      "groups": ["MapPlayersBlockAndArmour"],
       "text": "Players have #% reduced Chance to Block\nPlayers have #% less Armour",
       "generation_type": "suffix",
       "tags": [
@@ -1770,9 +1454,7 @@
   ],
   "uber_tier_map": [
     {
-      "groups": [
-        "MapMonstersEnduranceChargeOnHit"
-      ],
+      "groups": ["MapMonstersEnduranceChargeOnHit"],
       "text": "Monsters have +# to Maximum Endurance Charges\nMonsters gain an Endurance Charge when hit",
       "generation_type": "suffix",
       "tags": [
@@ -1797,9 +1479,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModVolatiles"
-      ],
+      "groups": ["MapUberModVolatiles"],
       "text": "Rare Monsters have Volatile Cores",
       "generation_type": "prefix",
       "tags": [
@@ -1810,9 +1490,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersCantBeSlowedOrTaunted"
-      ],
+      "groups": ["MapMonstersCantBeSlowedOrTaunted"],
       "text": "Monsters cannot be Stunned\nMonsters' Action Speed cannot be modified to below Base Value\nMonsters' Movement Speed cannot be modified to below Base Value",
       "generation_type": "suffix",
       "tags": [
@@ -1822,9 +1500,7 @@
       ]
     },
     {
-      "groups": [
-        "MapBossIsPossessed"
-      ],
+      "groups": ["MapBossIsPossessed"],
       "text": "Unique Bosses are Possessed",
       "generation_type": "prefix",
       "tags": [
@@ -1834,9 +1510,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerBuffsExpireFaster"
-      ],
+      "groups": ["MapPlayerBuffsExpireFaster"],
       "text": "Buffs on Players expire #% faster",
       "generation_type": "suffix",
       "tags": [
@@ -1847,9 +1521,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModMavenFollower"
-      ],
+      "groups": ["MapUberModMavenFollower"],
       "text": "The Maven interferes with Players",
       "generation_type": "suffix",
       "tags": [
@@ -1859,9 +1531,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModLessFlaskEffect"
-      ],
+      "groups": ["MapUberModLessFlaskEffect"],
       "text": "Players have #% less effect of Flasks applied to them",
       "generation_type": "prefix",
       "tags": [
@@ -1872,9 +1542,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModSynthMiniboss"
-      ],
+      "groups": ["MapUberModSynthMiniboss"],
       "text": "Map Boss is accompanied by a Synthesis Boss",
       "generation_type": "prefix",
       "tags": [
@@ -1884,9 +1552,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersChanceToSuppressSpells"
-      ],
+      "groups": ["MapMonstersChanceToSuppressSpells"],
       "text": "Monsters have +#% chance to Suppress Spell Damage",
       "generation_type": "prefix",
       "tags": [
@@ -1897,9 +1563,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModRareFracture"
-      ],
+      "groups": ["MapUberModRareFracture"],
       "text": "#% chance for Rare Monsters to Fracture on death",
       "generation_type": "suffix",
       "tags": [
@@ -1909,9 +1573,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModPlayerMarks"
-      ],
+      "groups": ["MapUberModPlayerMarks"],
       "text": "Area contains patches of moving Marked Ground, inflicting random Marks",
       "generation_type": "suffix",
       "tags": [
@@ -1922,9 +1584,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModMonsterAttackBlock"
-      ],
+      "groups": ["MapUberModMonsterAttackBlock"],
       "text": "Monsters have +#% Chance to Block Attack Damage",
       "generation_type": "prefix",
       "tags": [
@@ -1935,9 +1595,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModShrineBuff"
-      ],
+      "groups": ["MapUberModShrineBuff"],
       "text": "Unique Monsters have a random Shrine Buff",
       "generation_type": "suffix",
       "tags": [
@@ -1948,9 +1606,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModAmbush"
-      ],
+      "groups": ["MapUberModAmbush"],
       "text": "Players are assaulted by Bloodstained Sawblades",
       "generation_type": "prefix",
       "tags": [
@@ -1961,9 +1617,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModFlaskMeteor"
-      ],
+      "groups": ["MapUberModFlaskMeteor"],
       "text": "Players are targeted by a Meteor when they use a Flask",
       "generation_type": "suffix",
       "tags": [
@@ -1974,9 +1628,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModEleDamagePenetration"
-      ],
+      "groups": ["MapUberModEleDamagePenetration"],
       "text": "Monster Damage Penetrates #% Elemental Resistances",
       "generation_type": "suffix",
       "tags": [
@@ -1986,9 +1638,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterDamage"
-      ],
+      "groups": ["MapMonsterDamage"],
       "text": "#% increased Monster Damage",
       "generation_type": "prefix",
       "tags": [
@@ -1998,9 +1648,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterChaosDamage"
-      ],
+      "groups": ["MapMonsterChaosDamage"],
       "text": "Monsters gain #% of their Physical Damage as Extra Chaos Damage",
       "generation_type": "prefix",
       "tags": [
@@ -2010,9 +1658,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModTreachery"
-      ],
+      "groups": ["MapUberModTreachery"],
       "text": "Auras from Player Skills which affect Allies also affect Enemies",
       "generation_type": "suffix",
       "tags": [
@@ -2022,9 +1668,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModDamageAsElemental"
-      ],
+      "groups": ["MapUberModDamageAsElemental"],
       "text": "Monsters gain #% of their Physical Damage as Extra Damage of a random Element",
       "generation_type": "prefix",
       "tags": [
@@ -2034,9 +1678,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModMonsterAilments"
-      ],
+      "groups": ["MapUberModMonsterAilments"],
       "text": "Monsters Ignite, Freeze and Shock on Hit\nAll Monster Damage can Ignite, Freeze and Shock",
       "generation_type": "prefix",
       "tags": [
@@ -2047,9 +1689,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersFrenzyChargeOnHit"
-      ],
+      "groups": ["MapMonstersFrenzyChargeOnHit"],
       "text": "Monsters gain a Frenzy Charge on Hit\nMonsters have +# to Maximum Frenzy Charges",
       "generation_type": "suffix",
       "tags": [
@@ -2060,9 +1700,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModVines"
-      ],
+      "groups": ["MapUberModVines"],
       "text": "Monsters inflict # Grasping Vines on Hit",
       "generation_type": "prefix",
       "tags": [
@@ -2073,9 +1711,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterLifeLeechImmunity"
-      ],
+      "groups": ["MapMonsterLifeLeechImmunity"],
       "text": "Players have #% reduced Maximum total Life, Mana and Energy Shield Recovery per second from Leech",
       "generation_type": "suffix",
       "tags": [
@@ -2085,9 +1721,7 @@
       ]
     },
     {
-      "groups": [
-        "MabUberModChaining"
-      ],
+      "groups": ["MabUberModChaining"],
       "text": "Monsters' skills Chain # additional times\nMonsters' Projectiles can Chain when colliding with Terrain",
       "generation_type": "prefix",
       "tags": [
@@ -2097,9 +1731,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersBaseSelfCriticalMultiplier"
-      ],
+      "groups": ["MapMonstersBaseSelfCriticalMultiplier"],
       "text": "Monsters take #% reduced Extra Damage from Critical Strikes",
       "generation_type": "suffix",
       "tags": [
@@ -2109,9 +1741,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerMaxResists"
-      ],
+      "groups": ["MapPlayerMaxResists"],
       "text": "Players have -#% to all maximum Resistances",
       "generation_type": "suffix",
       "tags": [
@@ -2134,9 +1764,7 @@
       ]
     },
     {
-      "groups": [
-        "MapRareMonsters"
-      ],
+      "groups": ["MapRareMonsters"],
       "text": "Rare Monsters each have # additional Modifier\n#% increased number of Rare Monsters",
       "generation_type": "prefix",
       "tags": [
@@ -2160,9 +1788,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterLife"
-      ],
+      "groups": ["MapMonsterLife"],
       "text": "#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
@@ -2173,9 +1799,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModGlobalDefences"
-      ],
+      "groups": ["MapUberModGlobalDefences"],
       "text": "Players have #% less Defences",
       "generation_type": "suffix",
       "tags": [
@@ -2186,9 +1810,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModElderNovas"
-      ],
+      "groups": ["MapUberModElderNovas"],
       "text": "Area contains Unstable Tentacle Fiends",
       "generation_type": "suffix",
       "tags": [
@@ -2198,9 +1820,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersPowerChargeOnHit"
-      ],
+      "groups": ["MapMonstersPowerChargeOnHit"],
       "text": "Monsters gain a Power Charge on Hit\nMonsters have +# to Maximum Power Charges",
       "generation_type": "suffix",
       "tags": [
@@ -2211,9 +1831,7 @@
       ]
     },
     {
-      "groups": [
-        "MapTurbo"
-      ],
+      "groups": ["MapTurbo"],
       "text": "#% increased Monster Cast Speed\n#% increased Monster Attack Speed\n#% increased Monster Movement Speed",
       "generation_type": "prefix",
       "tags": [
@@ -2223,9 +1841,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersMaximumLifeAddedEnergyShield"
-      ],
+      "groups": ["MapMonstersMaximumLifeAddedEnergyShield"],
       "text": "Monsters gain #% of Maximum Life as Extra Maximum Energy Shield",
       "generation_type": "prefix",
       "tags": [
@@ -2236,9 +1852,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPoisoning"
-      ],
+      "groups": ["MapPoisoning"],
       "text": "Monsters Poison on Hit\nMonsters have #% increased Poison Duration\nAll Damage from Monsters' Hits can Poison",
       "generation_type": "suffix",
       "tags": [
@@ -2248,9 +1862,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayersAoERadius"
-      ],
+      "groups": ["MapPlayersAoERadius"],
       "text": "Players have #% less Area of Effect",
       "generation_type": "suffix",
       "tags": [
@@ -2260,9 +1872,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModLabyrinthHazards"
-      ],
+      "groups": ["MapUberModLabyrinthHazards"],
       "text": "Area contains Labyrinth Hazards",
       "generation_type": "prefix",
       "tags": [
@@ -2272,9 +1882,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModExarch"
-      ],
+      "groups": ["MapUberModExarch"],
       "text": "Area contains Runes of the Searing Exarch",
       "generation_type": "prefix",
       "tags": [
@@ -2284,9 +1892,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterCriticalStrikesAndDamage"
-      ],
+      "groups": ["MapMonsterCriticalStrikesAndDamage"],
       "text": "+#% to Monster Critical Strike Multiplier\nMonsters have #% increased Critical Strike Chance",
       "generation_type": "suffix",
       "tags": [
@@ -2309,9 +1915,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModAmbush"
-      ],
+      "groups": ["MapUberModAmbush"],
       "text": "Area contains Drowning Orbs",
       "generation_type": "prefix",
       "tags": [
@@ -2321,9 +1925,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModShaperTouched"
-      ],
+      "groups": ["MapUberModShaperTouched"],
       "text": "Rare monsters in area are Shaper-Touched",
       "generation_type": "prefix",
       "tags": [
@@ -2333,9 +1935,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModRaresLastGasp"
-      ],
+      "groups": ["MapUberModRaresLastGasp"],
       "text": "Rare monsters in area Temporarily Revive on death",
       "generation_type": "suffix",
       "tags": [
@@ -2345,9 +1945,7 @@
       ]
     },
     {
-      "groups": [
-        "MapUberModMonsterDebuffSpeed"
-      ],
+      "groups": ["MapUberModMonsterDebuffSpeed"],
       "text": "Debuffs on Monsters expire #% faster",
       "generation_type": "suffix",
       "tags": [
@@ -2360,9 +1958,7 @@
   ],
   "mid_tier_map": [
     {
-      "groups": [
-        "MapMonsterLightningDamage"
-      ],
+      "groups": ["MapMonsterLightningDamage"],
       "text": "Monsters deal #% extra Physical Damage as Lightning",
       "generation_type": "prefix",
       "tags": [
@@ -2372,9 +1968,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterFireDamage"
-      ],
+      "groups": ["MapMonsterFireDamage"],
       "text": "Monsters deal #% extra Physical Damage as Fire",
       "generation_type": "prefix",
       "tags": [
@@ -2384,9 +1978,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of Consecrated Ground",
       "generation_type": "suffix",
       "tags": [
@@ -2396,9 +1988,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayersBlockAndArmour"
-      ],
+      "groups": ["MapPlayersBlockAndArmour"],
       "text": "Players have #% reduced Chance to Block\nPlayers have #% less Armour",
       "generation_type": "suffix",
       "tags": [
@@ -2408,9 +1998,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of Burning Ground",
       "generation_type": "suffix",
       "tags": [
@@ -2420,9 +2008,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterAreaOfEffect"
-      ],
+      "groups": ["MapMonsterAreaOfEffect"],
       "text": "Monsters have #% increased Area of Effect",
       "generation_type": "suffix",
       "tags": [
@@ -2432,9 +2018,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerCurse"
-      ],
+      "groups": ["MapPlayerCurse"],
       "text": "Players are Cursed with Enfeeble",
       "generation_type": "suffix",
       "tags": [
@@ -2444,9 +2028,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerBuffsExpireFaster"
-      ],
+      "groups": ["MapPlayerBuffsExpireFaster"],
       "text": "Buffs on Players expire #% faster",
       "generation_type": "suffix",
       "tags": [
@@ -2456,9 +2038,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersAllResistances"
-      ],
+      "groups": ["MapMonstersAllResistances"],
       "text": "+#% Monster Chaos Resistance\n+#% Monster Elemental Resistances",
       "generation_type": "prefix",
       "tags": [
@@ -2468,9 +2048,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterElementalReflection"
-      ],
+      "groups": ["MapMonsterElementalReflection"],
       "text": "Monsters reflect #% of Elemental Damage",
       "generation_type": "prefix",
       "tags": [
@@ -2480,9 +2058,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterAccuracyPlayersUnlockyDodge"
-      ],
+      "groups": ["MapMonsterAccuracyPlayersUnlockyDodge"],
       "text": "Players have -#% to amount of Suppressed Spell Damage Prevented\nMonsters have #% increased Accuracy Rating",
       "generation_type": "suffix",
       "tags": [
@@ -2492,9 +2068,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerMaxResists"
-      ],
+      "groups": ["MapPlayerMaxResists"],
       "text": "Players have -#% to all maximum Resistances",
       "generation_type": "suffix",
       "tags": [
@@ -2504,9 +2078,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of Shocked Ground which increase Damage taken by #%",
       "generation_type": "suffix",
       "tags": [
@@ -2516,9 +2088,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerReducedRegen"
-      ],
+      "groups": ["MapPlayerReducedRegen"],
       "text": "Players cannot Regenerate Life, Mana or Energy Shield",
       "generation_type": "suffix",
       "tags": [
@@ -2528,9 +2098,7 @@
       ]
     },
     {
-      "groups": [
-        "MapDangerousBoss"
-      ],
+      "groups": ["MapDangerousBoss"],
       "text": "Unique Boss deals #% increased Damage\nUnique Boss has #% increased Attack and Cast Speed",
       "generation_type": "prefix",
       "tags": [
@@ -2540,9 +2108,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersImpaleOnHit"
-      ],
+      "groups": ["MapMonstersImpaleOnHit"],
       "text": "Monsters' Attacks have #% chance to Impale on Hit",
       "generation_type": "prefix",
       "tags": [
@@ -2552,9 +2118,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayersGainReducedFlaskCharges"
-      ],
+      "groups": ["MapPlayersGainReducedFlaskCharges"],
       "text": "Players gain #% reduced Flask Charges",
       "generation_type": "suffix",
       "tags": [
@@ -2564,9 +2128,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterLife"
-      ],
+      "groups": ["MapMonsterLife"],
       "text": "#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
@@ -2576,9 +2138,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersAvoidPoisonBleedBlind"
-      ],
+      "groups": ["MapMonstersAvoidPoisonBleedBlind"],
       "text": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding",
       "generation_type": "prefix",
       "tags": [
@@ -2588,9 +2148,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersChanceToInflictStatusAilments"
-      ],
+      "groups": ["MapMonstersChanceToInflictStatusAilments"],
       "text": "Monsters have a #% chance to Ignite, Freeze and Shock on Hit",
       "generation_type": "prefix",
       "tags": [
@@ -2600,9 +2158,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerCurse"
-      ],
+      "groups": ["MapPlayerCurse"],
       "text": "Players are Cursed with Vulnerability",
       "generation_type": "suffix",
       "tags": [
@@ -2612,9 +2168,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersMaximumLifeAddedEnergyShield"
-      ],
+      "groups": ["MapMonstersMaximumLifeAddedEnergyShield"],
       "text": "Monsters gain #% of Maximum Life as Extra Maximum Energy Shield",
       "generation_type": "prefix",
       "tags": [
@@ -2624,9 +2178,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMassiveBoss"
-      ],
+      "groups": ["MapMassiveBoss"],
       "text": "Unique Boss has #% increased Life\nUnique Boss has #% increased Area of Effect",
       "generation_type": "prefix",
       "tags": [
@@ -2636,9 +2188,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterStatusAilmentImmunity"
-      ],
+      "groups": ["MapMonsterStatusAilmentImmunity"],
       "text": "Monsters have #% chance to Avoid Elemental Ailments",
       "generation_type": "suffix",
       "tags": [
@@ -2648,9 +2198,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of desecrated ground",
       "generation_type": "suffix",
       "tags": [
@@ -2660,9 +2208,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersChanceToSuppressSpells"
-      ],
+      "groups": ["MapMonstersChanceToSuppressSpells"],
       "text": "Monsters have +#% chance to Suppress Spell Damage",
       "generation_type": "prefix",
       "tags": [
@@ -2672,9 +2218,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterDamage"
-      ],
+      "groups": ["MapMonsterDamage"],
       "text": "#% increased Monster Damage",
       "generation_type": "prefix",
       "tags": [
@@ -2684,9 +2228,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerCurse"
-      ],
+      "groups": ["MapPlayerCurse"],
       "text": "Players are Cursed with Elemental Weakness",
       "generation_type": "suffix",
       "tags": [
@@ -2696,9 +2238,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterCriticalStrikesAndDamage"
-      ],
+      "groups": ["MapMonsterCriticalStrikesAndDamage"],
       "text": "Monsters have #% increased Critical Strike Chance\n+#% to Monster Critical Strike Multiplier",
       "generation_type": "suffix",
       "tags": [
@@ -2708,9 +2248,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerAuraEffect"
-      ],
+      "groups": ["MapPlayerAuraEffect"],
       "text": "Players have #% reduced effect of Non-Curse Auras from Skills",
       "generation_type": "suffix",
       "tags": [
@@ -2720,9 +2258,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterColdDamage"
-      ],
+      "groups": ["MapMonsterColdDamage"],
       "text": "Monsters deal #% extra Physical Damage as Cold",
       "generation_type": "prefix",
       "tags": [
@@ -2732,9 +2268,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayersAoERadius"
-      ],
+      "groups": ["MapPlayersAoERadius"],
       "text": "Players have #% less Area of Effect",
       "generation_type": "suffix",
       "tags": [
@@ -2744,9 +2278,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterPhysicalReflection"
-      ],
+      "groups": ["MapMonsterPhysicalReflection"],
       "text": "Monsters reflect #% of Physical Damage",
       "generation_type": "prefix",
       "tags": [
@@ -2756,9 +2288,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerAccuracyRating"
-      ],
+      "groups": ["MapPlayerAccuracyRating"],
       "text": "Players have #% less Accuracy Rating",
       "generation_type": "suffix",
       "tags": [
@@ -2768,9 +2298,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonstersBaseSelfCriticalMultiplier"
-      ],
+      "groups": ["MapMonstersBaseSelfCriticalMultiplier"],
       "text": "Monsters take #% reduced Extra Damage from Critical Strikes",
       "generation_type": "suffix",
       "tags": [
@@ -2780,9 +2308,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterChaosDamage"
-      ],
+      "groups": ["MapMonsterChaosDamage"],
       "text": "Monsters gain #% of their Physical Damage as Extra Chaos Damage\nMonsters Inflict Withered for # seconds on Hit",
       "generation_type": "prefix",
       "tags": [
@@ -2792,9 +2318,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerCooldownRecovery"
-      ],
+      "groups": ["MapPlayerCooldownRecovery"],
       "text": "Players have #% less Cooldown Recovery Rate",
       "generation_type": "suffix",
       "tags": [
@@ -2804,9 +2328,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterFast"
-      ],
+      "groups": ["MapMonsterFast"],
       "text": "#% increased Monster Movement Speed\n#% increased Monster Attack Speed\n#% increased Monster Cast Speed",
       "generation_type": "prefix",
       "tags": [
@@ -2816,9 +2338,7 @@
       ]
     },
     {
-      "groups": [
-        "MapHexproof"
-      ],
+      "groups": ["MapHexproof"],
       "text": "#% less effect of Curses on Monsters",
       "generation_type": "prefix",
       "tags": [
@@ -2828,9 +2348,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterCannotBeStunned"
-      ],
+      "groups": ["MapMonsterCannotBeStunned"],
       "text": "Monsters cannot be Stunned\n#% more Monster Life",
       "generation_type": "prefix",
       "tags": [
@@ -2840,9 +2358,7 @@
       ]
     },
     {
-      "groups": [
-        "MapGroundEffect"
-      ],
+      "groups": ["MapGroundEffect"],
       "text": "Area has patches of Chilled Ground",
       "generation_type": "suffix",
       "tags": [
@@ -2852,9 +2368,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerReducedRegen"
-      ],
+      "groups": ["MapPlayerReducedRegen"],
       "text": "Players have #% less Recovery Rate of Life and Energy Shield",
       "generation_type": "suffix",
       "tags": [
@@ -2864,9 +2378,7 @@
       ]
     },
     {
-      "groups": [
-        "MapPlayerCurse"
-      ],
+      "groups": ["MapPlayerCurse"],
       "text": "Players are Cursed with Temporal Chains",
       "generation_type": "suffix",
       "tags": [
@@ -2876,9 +2388,7 @@
       ]
     },
     {
-      "groups": [
-        "MapMonsterPhysicalResistance"
-      ],
+      "groups": ["MapMonsterPhysicalResistance"],
       "text": "+#% Monster Physical Damage Reduction",
       "generation_type": "prefix",
       "tags": [
