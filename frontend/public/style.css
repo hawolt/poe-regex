@@ -68,8 +68,7 @@ a {
 }
 
 body.no-scroll {
-    /*position: fixed; disable this for now to prevent the site from jumping all the way to the top*/
-    /*overflow-y: scroll;*/
+    /* overflow-y: scroll; */
 }
 
 #wrapper {
@@ -78,15 +77,52 @@ body.no-scroll {
     overflow-y: auto;
 }
 
+/* ── Sticky two-row result bar ───────────────────────────────────────────── */
+
 #result {
-    border-bottom: 1px solid rgb(224, 224, 224, 0.2);
-    border-top: 1px solid rgb(224, 224, 224, 0.2);
-    background-color: #2E2E2E;
     position: sticky;
-    padding: 10px;
-    height: 75px;
     top: 0;
+    z-index: 100;
+    border-bottom: 1px solid rgba(224, 224, 224, 0.2);
 }
+
+/* Row 1: regex output — matches the original background */
+#result-regex-row {
+    background-color: #2E2E2E;
+    border-top: 1px solid rgba(224, 224, 224, 0.2);
+    padding: 8px 10px 6px 10px;
+    min-height: 52px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Row 2: buttons — slightly darker */
+#result-button-row {
+    background-color: #272727;
+    border-top: 1px solid rgba(224, 224, 224, 0.08);
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+}
+
+/* ── Regex text and hint ─────────────────────────────────────────────────── */
+
+#regex {
+    font-family: "Roboto Mono", monospace;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-size: 24px;
+    word-break: break-all;
+}
+
+#hint {
+    font-size: 14px;
+    color: #e0e0e0;
+    margin-top: 2px;
+}
+
+/* ── Legacy classes kept for other parts of the page ────────────────────── */
 
 .display {
     width: auto !important;
@@ -107,16 +143,11 @@ body.no-scroll {
     align-items: center;
 }
 
+/* ── Header / headline ───────────────────────────────────────────────────── */
+
 #headline {
     font-size: 50px;
     padding: 5px;
-}
-
-#regex {
-    font-family: "Roboto Mono", monospace;
-    font-optical-sizing: auto;
-    font-style: normal;
-    font-size: 24px;
 }
 
 .highlight-headline {
@@ -228,6 +259,8 @@ body.no-scroll {
     gap: 3px;
 }
 
+/* ── Tier colour coding ───────────────────────────────────────────────────── */
+
 .selectable {
     white-space: break-spaces;
     background: #2C2C2C;
@@ -235,13 +268,22 @@ body.no-scroll {
     padding: 5px;
 }
 
+/* Map implicits — soft gold tint */
+.implicit {
+    background: rgba(120, 100, 30, 0.35);
+}
+
+/* Vaal implicits — soft red */
 .vaal {
     background: rgba(108, 35, 35, 0.3);
 }
 
+/* T17 mods — muted purple */
 .t17 {
     background: #453d57;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
 
 .selectable:hover {
     background: #404040;
@@ -322,4 +364,9 @@ body.no-scroll {
 
 .hidden {
     display: none;
+}
+
+.regex-hint {
+    font-size: 14px;
+    color: #e0e0e0;
 }
