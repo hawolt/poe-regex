@@ -49,7 +49,7 @@ function tracker() {
 }
 
 async function load() {
-    read(["./league/settler/map.mods.config"])
+    return read(["./league/settler/map.mods.config"])
         .then(responses => responses[0])
         .then(response => build(response))
 }
