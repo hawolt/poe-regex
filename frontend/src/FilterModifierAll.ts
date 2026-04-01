@@ -13,7 +13,7 @@ export class FilterModifierAll extends Filter {
             const modifier = this.modifiers[i];
             if (this.isIgnored(modifier)) continue;
 
-            const valid = modifier.getModifier().toLowerCase().includes(substring.toLowerCase());
+            const valid    = modifier.getModifier().toLowerCase().includes(substring.toLowerCase());
             const required = this.includes(modifier, modifiers);
 
             if ((!required && valid) || (required && !valid)) {
@@ -69,12 +69,26 @@ export class FilterModifierAll extends Filter {
             list.forEach(item => options.add(item));
             console.log(`[All.create]   substrings: ${options.size}`);
 
-            // build exception list: mods that textually contain or are contained by this modifier
+            // Build exception list: only mods whose text is fully contained WITHIN the
+            // target modifier's text (i.e. the target contains the pool mod, not the
+            // other way around).
+            //
+            // The previous logic also included the "reversed" case — where a pool mod
+            // CONTAINS the target — which pulled supermods (e.g. the multi-line
+            // "Monsters cannot be Stunned\n#% more Monster Life") into the exception
+            // list when processing "#% more Monster Life". That forced the algorithm to
+            // find a token common to both mods, causing unrelated substrings like "move"
+            // (from Monster Movement Speed lines in the supermod) to be picked instead
+            // of the correct "r li".
+            //
+            // By only including mods that the target CONTAINS (direct direction), we
+            // restrict the exception list to mods that are genuinely sub-components of
+            // the target, and the uniqueness check works correctly against the full pool.
             for (const i in this.modifiers) {
                 const mod = this.modifiers[i];
-                const direct = modifier.getModifier().toLowerCase().includes(mod.getModifier().toLowerCase());
-                const reversed = mod.getModifier().toLowerCase().includes(modifier.getModifier().toLowerCase());
-                if (direct || reversed) exception.push(mod);
+                const direct = modifier.getModifier().toLowerCase()
+                    .includes(mod.getModifier().toLowerCase());
+                if (direct) exception.push(mod);
             }
             exception.push(modifier);
             console.log(`[All.create]   exception list: ${exception.length} mods`);
@@ -113,7 +127,7 @@ export class FilterModifierAll extends Filter {
                 console.log(`[All.create]   top match: "${matches[0]}"`);
                 try {
                     const optimized = this.optimize(matches[0], exception);
-                    const ideal = optimized.getIdealResult();
+                    const ideal     = optimized.getIdealResult();
                     console.log(`[All.create]   → result: "${ideal}"`);
                     result.add(ideal);
                 } catch (e) {

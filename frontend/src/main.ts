@@ -23,6 +23,10 @@ let inclusive: Modifier[] = [];
 // any of these are hidden from the UI panels entirely (not added to the DOM).
 let userHideSet: Set<string> = new Set();
 
+// Weight map from map.weight.config — substring → weight.
+// Higher weight = closer to top of the mod list. Mods with no match get 0.
+let userWeightMap: Map<string, number> = new Map();
+
 // The name of the currently active profile. Always has a value — defaults to "default".
 let activeProfile: string = "default";
 
@@ -42,13 +46,15 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(r => r.ok ? r.text() : "")
         .catch(() => "");
 
-    Promise.all([readText(blacklistFiles), userAffixP])
-        .then(([responses, userAffix]) => {
+    // map.weight.config is optional — silently ignore 404.
+    const userWeightP = fetch("./data/map.weight.config")
+        .then(r => r.ok ? r.text() : "")
+        .catch(() => "");
+
+    Promise.all([readText(blacklistFiles), userAffixP, userWeightP])
+        .then(([responses, userAffix, userWeight]) => {
             blacklist = initBlacklist(responses);
             // Build the UI-hide set from the user affix blacklist file.
-            // These substrings are used to filter mod entries out of the DOM
-            // entirely — they are NOT fed into the Blacklist object (which only
-            // affects regex generation, not panel visibility).
             userHideSet = new Set(
                 userAffix.split("\n")
                     .map(l => l.trim().toLowerCase())
@@ -56,6 +62,22 @@ document.addEventListener('DOMContentLoaded', () => {
             );
             if (userHideSet.size > 0) {
                 console.log(`[user-affix] hiding ${userHideSet.size} mod pattern(s):`, [...userHideSet]);
+            }
+            // Parse weight config: "modTextSubstring=weight" per line.
+            userWeightMap = new Map();
+            for (const raw of userWeight.split("\n")) {
+                const line = raw.trim();
+                if (!line || line.startsWith('#')) continue;
+                const eq = line.lastIndexOf('=');
+                if (eq === -1) continue;
+                const key = line.substring(0, eq).trim().toLowerCase();
+                const val = parseInt(line.substring(eq + 1).trim(), 10);
+                if (key.length > 0 && !isNaN(val)) {
+                    userWeightMap.set(key, val);
+                }
+            }
+            if (userWeightMap.size > 0) {
+                console.log(`[user-weight] loaded ${userWeightMap.size} weight rule(s)`);
             }
         })
         .then(() => loadModifiers())
@@ -234,6 +256,26 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
     }
 
     console.log(`[buildModifiers] total=${visibleEntries.length} (${flatEntries.length - visibleEntries.length} hidden by user-affix) regular=${regularEntries.length} t17=${t17Entries.length} vaal=${vaalEntries.length} implicit=${implicitEntries.length} associations=${associations.length} lineRelations=${lineRelations.size}`);
+
+    // Sort each group by user-defined weight (descending — highest weight first).
+    // Mods with no matching weight rule stay at weight 0 and appear after weighted mods.
+    const getWeight = (idx: number): number => {
+        if (userWeightMap.size === 0) return 0;
+        const text = modifiers[idx].getModifier().toLowerCase();
+        let best = 0;
+        for (const [pattern, w] of userWeightMap) {
+            if (text.includes(pattern) && w > best) best = w;
+        }
+        return best;
+    };
+
+    const byWeightDesc = (a: { idx: number }, b: { idx: number }) =>
+        getWeight(b.idx) - getWeight(a.idx);
+
+    regularEntries.sort(byWeightDesc);
+    t17Entries.sort(byWeightDesc);
+    vaalEntries.sort(byWeightDesc);
+    implicitEntries.sort(byWeightDesc);
 
     const targets = document.querySelectorAll(".mod-container");
     for (const { idx } of regularEntries) {
@@ -506,12 +548,13 @@ function generate(): void {
             return;
         }
 
-        const utilityExpr = buildUtilityExpression();
-        const mapExpr     = buildMapExpression();
+        const utilityExpr   = buildUtilityExpression();
+        const mapExpr       = buildMapExpression();
+        const corruptedExpr = buildCorruptedExpression();
 
         let base  = exclusiveExpr + ' ' + inclusiveExpr;
         base     += inclusiveExpr.trim().endsWith('"') ? '' : ' ';
-        const regex = (base + utilityExpr + mapExpr).trim();
+        const regex = (base + utilityExpr + mapExpr + corruptedExpr).trim();
 
         console.log(`[generate] final regex: "${regex}"`);
 
@@ -570,7 +613,15 @@ function buildModifierExpression(any: boolean, type: ModifierType): string {
         console.log(`[buildModifierExpression] filter.create done, result=${JSON.stringify(Array.from(result))}`);
         selection.set(type, [...target]);
 
+        const corrupted = localStorage.getItem('corrupted') ?? 'corrupted-ignore';
+
         if (any) {
+            // Weave pte into the exclusive token when blocking corrupted maps,
+            // or into the inclusive token when forcing corrupted maps.
+            const weave = (type === ModifierType.EXCLUSIVE && corrupted === 'corrupted-exclude')
+                || (type === ModifierType.INCLUSIVE && corrupted === 'corrupted-include');
+            if (weave) result.add('pte');
+
             const joined = Array.from(result).join("|").replace(/#/g, "\\d+");
             regex = joined.length > 0 ? `"${type === ModifierType.EXCLUSIVE ? '!' : ''}${joined}"` : "";
         } else {
@@ -578,6 +629,11 @@ function buildModifierExpression(any: boolean, type: ModifierType): string {
             for (const mod of result) {
                 const value = mod.replace(/#/g, "\\d+");
                 builder += mod.includes(" ") ? `"${value}" ` : `${value} `;
+            }
+            // In all-mode inclusive, pte can't be woven into a combined token
+            // so append it as its own token if forcing corrupted maps.
+            if (type === ModifierType.INCLUSIVE && corrupted === 'corrupted-include') {
+                builder += '"pte" ';
             }
             regex = builder;
         }
@@ -613,10 +669,6 @@ function buildUtilityExpression(): string {
     ].filter(Boolean).join('');
 }
 
-function cleanup(array: Modifier[]): Modifier[] {
-    return array.filter(mod => !mod.getModifier().toLowerCase().includes("corrupted"));
-}
-
 function buildMapExpression(): string {
     const type = (document.getElementById('maps-include') as HTMLInputElement).checked
         ? ModifierType.INCLUSIVE : ModifierType.EXCLUSIVE;
@@ -635,6 +687,16 @@ function buildMapExpression(): string {
         const expr = maps.length === 1 ? maps[0] : `(${maps.join('|')})`;
         return ` "${type === ModifierType.EXCLUSIVE ? '!' : ''}y: ${expr}"`;
     }
+    return '';
+}
+
+function buildCorruptedExpression(): string {
+    // Only emits a standalone token when there are no exclusive/inclusive mods selected.
+    // When mods are selected, pte is already woven into the exclusive or inclusive
+    // expression inside buildModifierExpression — so we must not double-emit it here.
+    const corrupted = localStorage.getItem('corrupted') ?? 'corrupted-ignore';
+    if (corrupted === 'corrupted-exclude' && exclusive.length === 0) return ' "!pte"';
+    if (corrupted === 'corrupted-include' && inclusive.length === 0) return ' "pte"';
     return '';
 }
 
@@ -736,8 +798,30 @@ function setup(): void {
 
     for (const attr of ['t17', 'vaal', 'implicit'] as const) {
         document.getElementById(attr)!.addEventListener('change', e => {
-            toggle(attr, (e.target as HTMLInputElement).checked);
-            selection.clear();
+            const checked = (e.target as HTMLInputElement).checked;
+            toggle(attr, checked);
+            // When a mod category is turned off, fully deselect any selected mods
+            // of that type — undoing group member disabling and counterpart disabling
+            // exactly as if the user had clicked each mod off manually.
+            if (!checked) {
+                const isOfType = (mod: Modifier) => {
+                    if (attr === 't17'      && mod.isT17())      return true;
+                    if (attr === 'vaal'     && mod.isVaal())     return true;
+                    if (attr === 'implicit' && mod.isImplicit()) return true;
+                    return false;
+                };
+                for (const [type, array] of [[ModifierType.EXCLUSIVE, exclusive], [ModifierType.INCLUSIVE, inclusive]] as const) {
+                    for (const mod of array.filter(isOfType)) {
+                        // Re-enable counterpart and group members
+                        disableCounterpartContainer(mod.getIndex(), false, type, mod);
+                        toggleGroupMembers(mod.getIndex(), false);
+                    }
+                }
+                exclusive = exclusive.filter(m => !isOfType(m));
+                inclusive = inclusive.filter(m => !isOfType(m));
+                selection.clear();
+                cache.clear();
+            }
             construct();
         });
     }
@@ -780,17 +864,12 @@ function setup(): void {
 
     document.querySelectorAll('.trigger-3').forEach(el => {
         el.addEventListener('input', e => {
-            exclusive = cleanup(exclusive);
-            inclusive = cleanup(inclusive);
             const target = e.target as HTMLElement;
             localStorage.setItem("corrupted", target.id);
-            let type: ModifierType | null = null;
-            if (target.id === 'corrupted-include') type = ModifierType.INCLUSIVE;
-            else if (target.id === 'corrupted-exclude') type = ModifierType.EXCLUSIVE;
-            if (type !== null) {
-                const mod = new Modifier("Corrupted", -1, [], true, false, false, false);
-                (type === ModifierType.EXCLUSIVE ? exclusive : inclusive).push(mod);
-            }
+            // Invalidate cached expressions — pte weaving depends on corrupted state
+            // so the cache must be cleared even if mod selections haven't changed.
+            selection.clear();
+            cache.clear();
             construct();
         });
     });

@@ -49,14 +49,27 @@ export class FilterModifierAny extends Filter {
         console.log(`[Any.create] ── fs=${failsafe} required=${required.length} result=${result.size} ──`);
         required.forEach((m, i) => console.log(`  req[${i}]: idx=${m.getIndex()} t17=${m.isT17()} vaal=${m.isVaal()} impl=${m.isImplicit()} "${m.getModifier().substring(0, 70)}"`));
 
-        // upgrade: add group-associated mods so substring uniqueness is checked against all tier-variants
-        const beforeUpgrade = required.length;
-        required = association.upgrade(this.t17, required, this.modifiers, result);
-        console.log(`[Any.create] upgrade: ${beforeUpgrade} → ${required.length} mods`);
-        if (required.length > beforeUpgrade) {
-            required.slice(beforeUpgrade).forEach((m, i) =>
-                console.log(`  +added[${i}]: idx=${m.getIndex()} t17=${m.isT17()} "${m.getModifier().substring(0, 60)}"`)
-            );
+        // upgrade: add group-associated and line-related mods so substring uniqueness
+        // is checked against all tier-variants and supermods.
+        //
+        // IMPORTANT: only run upgrade at the first invocation (failsafe === 0).
+        // On recursive calls the remaining mods are already line-relation additions
+        // from the initial upgrade. Re-running upgrade on them causes transitive
+        // expansion — e.g. the "Monsters cannot be Stunned\n#% more Monster Life"
+        // supermod shares lines with movement speed supermods, so upgrade pulls those
+        // in, and then "move" gets picked as a token even though it is completely
+        // unrelated to the user's selection.
+        if (failsafe === 0) {
+            const beforeUpgrade = required.length;
+            required = association.upgrade(this.t17, required, this.modifiers, result);
+            console.log(`[Any.create] upgrade: ${beforeUpgrade} → ${required.length} mods`);
+            if (required.length > beforeUpgrade) {
+                required.slice(beforeUpgrade).forEach((m, i) =>
+                    console.log(`  +added[${i}]: idx=${m.getIndex()} t17=${m.isT17()} "${m.getModifier().substring(0, 60)}"`)
+                );
+            }
+        } else {
+            console.log(`[Any.create] fs=${failsafe} — skipping upgrade (already expanded at fs=0)`);
         }
 
         // generate all substrings across all required mods
