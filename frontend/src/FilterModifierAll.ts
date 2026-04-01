@@ -112,7 +112,7 @@ export class FilterModifierAll extends Filter {
             if (matches.length > 0) {
                 console.log(`[All.create]   top match: "${matches[0]}"`);
                 try {
-                    const optimized = this.optimize(matches[0], required);
+                    const optimized = this.optimize(matches[0], exception);
                     const ideal     = optimized.getIdealResult();
                     console.log(`[All.create]   → result: "${ideal}"`);
                     result.add(ideal);
