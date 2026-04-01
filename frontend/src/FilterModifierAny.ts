@@ -11,14 +11,17 @@ export class FilterModifierAny extends Filter {
 
         for (let i = 0; i < this.modifiers.length; i++) {
             const modifier = this.modifiers[i];
-            const info     = modifier.getModifier().toLowerCase();
+            const info = modifier.getModifier().toLowerCase();
 
             if (!info.includes(substring)) continue;
             if (this.isIgnored(modifier)) continue;
 
             let alreadyMatched = false;
             for (const regex of result) {
-                if (info.includes(regex)) { alreadyMatched = true; break; }
+                if (info.includes(regex)) {
+                    alreadyMatched = true;
+                    break;
+                }
             }
             if (alreadyMatched) continue;
 
@@ -121,7 +124,7 @@ export class FilterModifierAny extends Filter {
         try {
             const optimized = this.optimize(proposed, required);
             expression = optimized.getRegularExpression();
-            ideal      = optimized.getIdealResult();
+            ideal = optimized.getIdealResult();
             console.log(`[Any.create] optimized ideal="${ideal}" expr=${expression}`);
         } catch (e) {
             console.error(`[Any.create] optimize() THREW:`, e);
@@ -132,10 +135,10 @@ export class FilterModifierAny extends Filter {
         // remove mods now matched by this ideal
         const beforeFilter = required.length;
         required = required.filter(modifier => {
-            const lines   = modifier.getModifier().toLowerCase().split('\\n');
+            const lines = modifier.getModifier().toLowerCase().split('\\n');
             const matched = lines.some(line => expression.test(line));
             if (matched) console.log(`  [filter] REMOVED idx=${modifier.getIndex()} "${modifier.getModifier().substring(0, 60)}"`);
-            else         console.log(`  [filter] kept    idx=${modifier.getIndex()} "${modifier.getModifier().substring(0, 60)}"`);
+            else console.log(`  [filter] kept    idx=${modifier.getIndex()} "${modifier.getModifier().substring(0, 60)}"`);
             return !matched;
         });
         console.log(`[Any.create] filter: ${beforeFilter} → ${required.length} remaining`);

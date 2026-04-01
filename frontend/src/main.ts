@@ -9,7 +9,7 @@ import {generateRegularExpression} from "./MinNumRegex";
 
 const call = performance.now();
 
-const REGULAR_KEYS   = ["default", "low_tier_map", "mid_tier_map", "top_tier_map"] as const;
+const REGULAR_KEYS = ["default", "low_tier_map", "mid_tier_map", "top_tier_map"] as const;
 const TIER_KEY_ORDER = ["implicit", ...REGULAR_KEYS, "uber_tier_map"] as const;
 
 let selection: Map<ModifierType, Modifier[]> = new Map();
@@ -76,7 +76,7 @@ async function loadModifiers(): Promise<void> {
         const eq = line.indexOf('=');
         if (eq === -1) continue;
         const key = line.substring(0, eq).trim();
-        const fb  = line.substring(eq + 1).trim();
+        const fb = line.substring(eq + 1).trim();
         if (key.length > 0 && fb.length > 0) {
             fallbacks.set(key, fb);
             console.log(`[fallback] "${key}" → "${fb}"`);
@@ -115,12 +115,12 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
     }
 
     const flatEntries: FlatEntry[] = [];
-    const regularTexts  = new Set<string>();
+    const regularTexts = new Set<string>();
     const implicitTexts = new Set<string>();
 
     for (const key of TIER_KEY_ORDER) {
         const section: any[] = config[key] ?? [];
-        const isT17      = key === "uber_tier_map";
+        const isT17 = key === "uber_tier_map";
         const isImplicit = key === "implicit";
 
         for (const entry of section) {
@@ -138,7 +138,13 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
                 regularTexts.add(text);
             }
 
-            flatEntries.push({ text, groups: Array.isArray(entry.groups) ? entry.groups : [], t17: isT17, vaal: isVaal, implicit: isImplicit });
+            flatEntries.push({
+                text,
+                groups: Array.isArray(entry.groups) ? entry.groups : [],
+                t17: isT17,
+                vaal: isVaal,
+                implicit: isImplicit
+            });
         }
     }
 
@@ -190,41 +196,41 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
         }
     }
 
-    const regularEntries:  { idx: number }[] = [];
-    const t17Entries:      { idx: number }[] = [];
-    const vaalEntries:     { idx: number }[] = [];
+    const regularEntries: { idx: number }[] = [];
+    const t17Entries: { idx: number }[] = [];
+    const vaalEntries: { idx: number }[] = [];
     const implicitEntries: { idx: number }[] = [];
 
     for (let i = 0; i < flatEntries.length; i++) {
-        const e  = flatEntries[i];
+        const e = flatEntries[i];
         const fb = fallbacks.get(e.text) ?? null;
         const mod = new Modifier(e.text, i, e.groups, true, e.t17, e.vaal, e.implicit, fb);
         modifiers.push(mod);
-        if (e.implicit)  implicitEntries.push({ idx: i });
-        else if (e.vaal) vaalEntries.push({ idx: i });
-        else if (e.t17)  t17Entries.push({ idx: i });
-        else             regularEntries.push({ idx: i });
+        if (e.implicit) implicitEntries.push({idx: i});
+        else if (e.vaal) vaalEntries.push({idx: i});
+        else if (e.t17) t17Entries.push({idx: i});
+        else regularEntries.push({idx: i});
     }
 
     console.log(`[buildModifiers] total=${flatEntries.length} regular=${regularEntries.length} t17=${t17Entries.length} vaal=${vaalEntries.length} implicit=${implicitEntries.length} associations=${associations.length} lineRelations=${lineRelations.size}`);
 
     const targets = document.querySelectorAll(".mod-container");
-    for (const { idx } of regularEntries) {
+    for (const {idx} of regularEntries) {
         for (let j = 0; j < targets.length; j++) {
             targets[j].appendChild(createSelectableContainer(idx, j === 0 ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE, modifiers[idx]));
         }
     }
-    for (const { idx } of t17Entries) {
+    for (const {idx} of t17Entries) {
         for (let j = 0; j < targets.length; j++) {
             targets[j].insertBefore(createSelectableContainer(idx, j === 0 ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE, modifiers[idx]), targets[j].firstChild);
         }
     }
-    for (const { idx } of vaalEntries) {
+    for (const {idx} of vaalEntries) {
         for (let j = 0; j < targets.length; j++) {
             targets[j].insertBefore(createSelectableContainer(idx, j === 0 ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE, modifiers[idx]), targets[j].firstChild);
         }
     }
-    for (const { idx } of implicitEntries) {
+    for (const {idx} of implicitEntries) {
         for (let j = 0; j < targets.length; j++) {
             targets[j].insertBefore(createSelectableContainer(idx, j === 0 ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE, modifiers[idx]), targets[j].firstChild);
         }
@@ -239,15 +245,22 @@ function createSelectableContainer(index: number, type: ModifierType, modifier: 
     const div = document.createElement("div");
     div.classList.add("selectable");
 
-    if (modifier.isImplicit()) { div.classList.add("implicit"); div.style.display = "none"; }
-    else if (modifier.isVaal()) { div.classList.add("vaal"); div.style.display = "none"; }
-    else if (modifier.isT17()) { div.classList.add("t17"); div.style.display = "none"; }
+    if (modifier.isImplicit()) {
+        div.classList.add("implicit");
+        div.style.display = "none";
+    } else if (modifier.isVaal()) {
+        div.classList.add("vaal");
+        div.style.display = "none";
+    } else if (modifier.isT17()) {
+        div.classList.add("t17");
+        div.style.display = "none";
+    }
 
-    div.dataset.mod      = index.toString();
-    div.dataset.t17      = modifier.isT17().toString();
-    div.dataset.vaal     = modifier.isVaal().toString();
+    div.dataset.mod = index.toString();
+    div.dataset.t17 = modifier.isT17().toString();
+    div.dataset.vaal = modifier.isVaal().toString();
     div.dataset.implicit = modifier.isImplicit().toString();
-    div.textContent      = modifier.getModifier().replace(/\\n/g, "\n");
+    div.textContent = modifier.getModifier().replace(/\\n/g, "\n");
 
     div.addEventListener('click', (event) => {
         const element = event.target as HTMLElement;
@@ -255,7 +268,7 @@ function createSelectableContainer(index: number, type: ModifierType, modifier: 
 
         element.classList.toggle('selected-item');
         const active = element.classList.contains('selected-item');
-        const array  = type === ModifierType.EXCLUSIVE ? exclusive : inclusive;
+        const array = type === ModifierType.EXCLUSIVE ? exclusive : inclusive;
 
         disableCounterpartContainer(index, active, type, modifier);
         handleModifierSelection(active, array, modifier);
@@ -281,7 +294,7 @@ function handleModifierSelection(active: boolean, array: Modifier[], modifier: M
 }
 
 function disableCounterpartContainer(index: number, active: boolean, type: ModifierType, modifier: Modifier): void {
-    const target  = type === ModifierType.EXCLUSIVE ? 'inclusive' : 'exclusive';
+    const target = type === ModifierType.EXCLUSIVE ? 'inclusive' : 'exclusive';
     const element = document.querySelector(`#${target} .selectable[data-mod="${index}"]`);
     if (!element) return;
     if (active) {
@@ -294,18 +307,24 @@ function disableCounterpartContainer(index: number, active: boolean, type: Modif
 
 function toggleGroupMembers(index: number, active: boolean): void {
     const visited = new Set<number>([index]);
-    const queue   = [index];
+    const queue = [index];
 
     const lineRelatedOfOrigin = lineRelations.get(index) ?? new Set<number>();
     for (const r of lineRelatedOfOrigin) {
-        if (!visited.has(r)) { visited.add(r); queue.push(r); }
+        if (!visited.has(r)) {
+            visited.add(r);
+            queue.push(r);
+        }
     }
 
     while (queue.length > 0) {
         const current = queue.shift()!;
         const groupRelated = associations.find(([idx]) => idx === current)?.[1] ?? [];
         for (const r of groupRelated) {
-            if (!visited.has(r)) { visited.add(r); queue.push(r); }
+            if (!visited.has(r)) {
+                visited.add(r);
+                queue.push(r);
+            }
         }
     }
 
@@ -329,8 +348,8 @@ function rebuild(): void {
         localStorage.setItem(PROFILE_KEY_PREFIX + 'default', packState(captureState('default')));
     }
 
-    restoreCheckbox('t17',      val => toggle('t17',      val));
-    restoreCheckbox('vaal',     val => toggle('vaal',     val));
+    restoreCheckbox('t17', val => toggle('t17', val));
+    restoreCheckbox('vaal', val => toggle('vaal', val));
     restoreCheckbox('implicit', val => toggle('implicit', val));
 
     const typeStored = localStorage.getItem('maps-include');
@@ -352,7 +371,10 @@ function rebuild(): void {
     const corruptedStored = localStorage.getItem('corrupted');
     if (corruptedStored) {
         const el = document.getElementById(corruptedStored) as HTMLInputElement;
-        if (el) { el.checked = true; handleCheckboxChange(el); }
+        if (el) {
+            el.checked = true;
+            handleCheckboxChange(el);
+        }
     }
 
     for (const [main, secondary] of [
@@ -374,8 +396,8 @@ function restoreCheckbox(id: string, onChange: (val: boolean) => void): void {
 }
 
 function restoreSelectionsFromRegex(savedRegex: string): void {
-    const t17Stored      = localStorage.getItem("t17");
-    const vaalStored     = localStorage.getItem("vaal");
+    const t17Stored = localStorage.getItem("t17");
+    const vaalStored = localStorage.getItem("vaal");
     const implicitStored = localStorage.getItem("implicit");
 
     const args = savedRegex.match(/"([^"]*)"|(\S+)/g)?.map(s =>
@@ -384,17 +406,17 @@ function restoreSelectionsFromRegex(savedRegex: string): void {
 
     for (const arg of args) {
         const containerId = arg.indexOf('!') !== -1 ? 'exclusive' : 'inclusive';
-        const container   = (document.getElementById(containerId) as HTMLElement)?.querySelector('.mod-container');
+        const container = (document.getElementById(containerId) as HTMLElement)?.querySelector('.mod-container');
         if (!container) continue;
 
-        const pattern  = arg.replace('!', '');
-        const re       = new RegExp(pattern, 'i');
+        const pattern = arg.replace('!', '');
+        const re = new RegExp(pattern, 'i');
         const children = container.children;
 
         for (let i = 0; i < children.length; i++) {
             const child = children[i] as HTMLElement;
-            if (child.dataset.t17      === 'true' && t17Stored      === 'false') continue;
-            if (child.dataset.vaal     === 'true' && vaalStored     === 'false') continue;
+            if (child.dataset.t17 === 'true' && t17Stored === 'false') continue;
+            if (child.dataset.vaal === 'true' && vaalStored === 'false') continue;
             if (child.dataset.implicit === 'true' && implicitStored === 'false') continue;
             if (child.classList.contains('disabled-item')) continue;
             if (!child.textContent || !re.test(child.textContent)) continue;
@@ -405,7 +427,7 @@ function restoreSelectionsFromRegex(savedRegex: string): void {
 
             child.classList.toggle('selected-item');
             const active = child.classList.contains('selected-item');
-            const type   = containerId === 'exclusive' ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE;
+            const type = containerId === 'exclusive' ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE;
             disableCounterpartContainer(modIndex, active, type, modifier);
             handleModifierSelection(active, (type === ModifierType.EXCLUSIVE ? exclusive : inclusive), modifier);
             toggleGroupMembers(modIndex, active);
@@ -439,7 +461,7 @@ function generate(): void {
     inclusive.forEach((m, i) => console.log(`  incl[${i}] idx=${m.getIndex()} "${m.getModifier().substring(0, 60)}"`));
 
     document.getElementById('regex')!.innerText = "crunching numbers...";
-    document.getElementById('hint')!.innerText  = "";
+    document.getElementById('hint')!.innerText = "";
 
     setTimeout(() => {
         const any = (document.getElementById('any') as HTMLInputElement).checked;
@@ -448,7 +470,7 @@ function generate(): void {
 
         let exclusiveExpr = "";
         let inclusiveExpr = "";
-        let failed        = false;
+        let failed = false;
 
         try {
             console.log(`[generate] building EXCLUSIVE...`);
@@ -474,16 +496,16 @@ function generate(): void {
 
         if (failed) {
             document.getElementById('regex')!.innerText = "";
-            document.getElementById('hint')!.innerText  = "⚠ Could not find a unique pattern for that selection — mod was deselected.";
+            document.getElementById('hint')!.innerText = "⚠ Could not find a unique pattern for that selection — mod was deselected.";
             modal('loading-modal', false);
             return;
         }
 
         const utilityExpr = buildUtilityExpression();
-        const mapExpr     = buildMapExpression();
+        const mapExpr = buildMapExpression();
 
-        let base  = exclusiveExpr + ' ' + inclusiveExpr;
-        base     += inclusiveExpr.trim().endsWith('"') ? '' : ' ';
+        let base = exclusiveExpr + ' ' + inclusiveExpr;
+        base += inclusiveExpr.trim().endsWith('"') ? '' : ' ';
         const regex = (base + utilityExpr + mapExpr).trim();
 
         console.log(`[generate] final regex: "${regex}"`);
@@ -492,7 +514,7 @@ function generate(): void {
         localStorage.setItem("regex", regex);
 
         const hint = document.getElementById('hint')!;
-        hint.innerText   = regex.length > 0 ? `length: ${regex.length} / 250` : '';
+        hint.innerText = regex.length > 0 ? `length: ${regex.length} / 250` : '';
         hint.style.color = regex.length > 250 ? '#ff4d4d' : '#e0e0e0';
 
         modal('loading-modal', false);
@@ -516,27 +538,27 @@ function buildSuitableExcludeList(type: ModifierType): Blacklist {
 }
 
 function buildModifierExpression(any: boolean, type: ModifierType): string {
-    const t17El      = document.getElementById('t17')      as HTMLInputElement;
-    const vaalEl     = document.getElementById('vaal')     as HTMLInputElement;
+    const t17El = document.getElementById('t17') as HTMLInputElement;
+    const vaalEl = document.getElementById('vaal') as HTMLInputElement;
     const implicitEl = document.getElementById('implicit') as HTMLInputElement;
 
-    localStorage.setItem("t17",      t17El.checked.toString());
-    localStorage.setItem("vaal",     vaalEl.checked.toString());
+    localStorage.setItem("t17", t17El.checked.toString());
+    localStorage.setItem("vaal", vaalEl.checked.toString());
     localStorage.setItem("implicit", implicitEl.checked.toString());
 
     const excludes = buildSuitableExcludeList(type);
-    const filter   = any
+    const filter = any
         ? new FilterModifierAny(t17El.checked, vaalEl.checked, implicitEl.checked, modifiers, excludes, blacklist)
         : new FilterModifierAll(t17El.checked, vaalEl.checked, implicitEl.checked, modifiers, excludes, blacklist);
 
-    const target   = type === ModifierType.EXCLUSIVE ? exclusive : inclusive;
+    const target = type === ModifierType.EXCLUSIVE ? exclusive : inclusive;
     const previous = selection.get(type) ?? [];
 
     console.log(`[buildModifierExpression] type=${ModifierType[type]} any=${any} t17=${t17El.checked} vaal=${vaalEl.checked} impl=${implicitEl.checked} target=${target.length} sameAsPrev=${compare(previous, target)}`);
 
     let regex = "";
     if (!compare(previous, target)) {
-        const result      = new Set<string>();
+        const result = new Set<string>();
         const association = new MapAssociation();
         console.log(`[buildModifierExpression] calling filter.create, modifiers pool size=${modifiers.length}`);
         filter.create(association, result, target, 0);
@@ -571,18 +593,18 @@ function buildSpecificUtilityExpression(main: string, secondary: string, unique:
     localStorage.setItem(secondary, String(optimize));
     const expression = generateRegularExpression(quantity, optimize);
     if (expression === null) return null;
-    if (expression === '')   return `"${unique}"`;
+    if (expression === '') return `"${unique}"`;
     return `"${unique}.*${expression}%"`;
 }
 
 function buildUtilityExpression(): string {
     return [
-        buildSpecificUtilityExpression('quantity',  'optimize-quantity', 'm q'),
-        buildSpecificUtilityExpression('pack-size', 'optimize-pack',     'iz'),
-        buildSpecificUtilityExpression('scarabs',   'optimize-scarab',   'abs'),
-        buildSpecificUtilityExpression('maps',      'optimize-maps',     'ps:'),
-        buildSpecificUtilityExpression('currency',  'optimize-currency', 'urr'),
-        buildSpecificUtilityExpression('rarity',    'optimize-rarity',   'm r.*y'),
+        buildSpecificUtilityExpression('quantity', 'optimize-quantity', 'm q'),
+        buildSpecificUtilityExpression('pack-size', 'optimize-pack', 'iz'),
+        buildSpecificUtilityExpression('scarabs', 'optimize-scarab', 'abs'),
+        buildSpecificUtilityExpression('maps', 'optimize-maps', 'ps:'),
+        buildSpecificUtilityExpression('currency', 'optimize-currency', 'urr'),
+        buildSpecificUtilityExpression('rarity', 'optimize-rarity', 'm r.*y'),
     ].filter(Boolean).join('');
 }
 
@@ -638,12 +660,12 @@ function toggle(attribute: string, selected: boolean): void {
 }
 
 function filter(element: HTMLElement): void {
-    const query     = (element as HTMLInputElement).value;
+    const query = (element as HTMLInputElement).value;
     const container = element.closest('.container-search')?.nextElementSibling as HTMLElement;
     if (!container?.classList.contains('mod-container')) return;
 
-    const t17El      = document.getElementById('t17')      as HTMLInputElement;
-    const vaalEl     = document.getElementById('vaal')     as HTMLInputElement;
+    const t17El = document.getElementById('t17') as HTMLInputElement;
+    const vaalEl = document.getElementById('vaal') as HTMLInputElement;
     const implicitEl = document.getElementById('implicit') as HTMLInputElement;
 
     let re: RegExp | null = null;
@@ -659,17 +681,20 @@ function filter(element: HTMLElement): void {
         const text = child.textContent?.toLowerCase() ?? '';
         const matchesQ = re === null || re.test(text);
 
-        if (!matchesQ) { child.style.display = 'none'; continue; }
+        if (!matchesQ) {
+            child.style.display = 'none';
+            continue;
+        }
 
         const isImplicit = child.dataset.implicit === 'true';
-        const isVaal     = child.dataset.vaal     === 'true';
-        const isT17      = child.dataset.t17      === 'true';
-        const isNormal   = !isImplicit && !isVaal && !isT17;
+        const isVaal = child.dataset.vaal === 'true';
+        const isT17 = child.dataset.t17 === 'true';
+        const isNormal = !isImplicit && !isVaal && !isT17;
 
         child.style.display = (
             (isImplicit && implicitEl.checked) ||
-            (isVaal     && vaalEl.checked)     ||
-            (isT17      && t17El.checked)      ||
+            (isVaal && vaalEl.checked) ||
+            (isT17 && t17El.checked) ||
             isNormal
         ) ? '' : 'none';
     }
@@ -677,7 +702,7 @@ function filter(element: HTMLElement): void {
 
 function wipe(): void {
     document.getElementById('regex')!.innerText = '';
-    document.getElementById('hint')!.innerText  = '';
+    document.getElementById('hint')!.innerText = '';
     exclusive.length = 0;
     inclusive.length = 0;
     selection.clear();
@@ -716,7 +741,10 @@ function setup(): void {
     }
 
     document.getElementById('clear')!.addEventListener('click', wipe);
-    document.getElementById('reset')!.addEventListener('click', () => { localStorage.clear(); window.location.reload(); });
+    document.getElementById('reset')!.addEventListener('click', () => {
+        localStorage.clear();
+        window.location.reload();
+    });
     document.getElementById('copy')!.addEventListener('click', () => {
         navigator.clipboard.writeText(document.getElementById('regex')!.innerText);
     });
@@ -747,9 +775,15 @@ function setup(): void {
         });
     });
 
-    document.querySelectorAll('.trigger-0').forEach(el => { el.addEventListener('change', () => construct()); });
-    document.querySelectorAll('.trigger-1').forEach(el => { el.addEventListener('input',  () => construct()); });
-    document.querySelectorAll('.trigger-2').forEach(el => { el.addEventListener('input',  () => selection.delete(ModifierType.INCLUSIVE)); });
+    document.querySelectorAll('.trigger-0').forEach(el => {
+        el.addEventListener('change', () => construct());
+    });
+    document.querySelectorAll('.trigger-1').forEach(el => {
+        el.addEventListener('input', () => construct());
+    });
+    document.querySelectorAll('.trigger-2').forEach(el => {
+        el.addEventListener('input', () => selection.delete(ModifierType.INCLUSIVE));
+    });
 
     document.querySelectorAll('.trigger-3').forEach(el => {
         el.addEventListener('input', e => {
@@ -778,14 +812,22 @@ function setup(): void {
 function debugSanityCheck(): void {
     console.group('[sanity] standalone regex check — testing all mods individually (t17+vaal+implicit enabled)');
     const emptyBlacklist = new Blacklist();
-    const results: { idx: number; t17: string; vaal: string; implicit: string; mode: string; text: string; status: string }[] = [];
+    const results: {
+        idx: number;
+        t17: string;
+        vaal: string;
+        implicit: string;
+        mode: string;
+        text: string;
+        status: string
+    }[] = [];
     for (const mod of modifiers) {
         for (const useAny of [false, true]) {
             const f = useAny
                 ? new FilterModifierAny(true, true, true, modifiers, emptyBlacklist, blacklist)
                 : new FilterModifierAll(true, true, true, modifiers, emptyBlacklist, blacklist);
             const result = new Set<string>();
-            const assoc  = new MapAssociation();
+            const assoc = new MapAssociation();
             try {
                 f.create(assoc, result, [mod], 0);
             } catch (e) {
@@ -805,45 +847,51 @@ function debugSanityCheck(): void {
 // ─── State Capture / Apply ────────────────────────────────────────────────────
 
 interface ConfigState {
-    profileName:     string;
-    t17:             boolean;
-    vaal:            boolean;
-    implicit:        boolean;
-    any:             boolean;
-    mapsInclude:     boolean;
-    mapNormal:       boolean;
-    mapMagic:        boolean;
-    mapRare:         boolean;
-    corrupted:       string;
-    quantity:        string;  optimizeQuantity: boolean;
-    packSize:        string;  optimizePack:     boolean;
-    scarabs:         string;  optimizeScarab:   boolean;
-    maps:            string;  optimizeMaps:     boolean;
-    currency:        string;  optimizeCurrency: boolean;
-    rarity:          string;  optimizeRarity:   boolean;
-    regex:           string;
+    profileName: string;
+    t17: boolean;
+    vaal: boolean;
+    implicit: boolean;
+    any: boolean;
+    mapsInclude: boolean;
+    mapNormal: boolean;
+    mapMagic: boolean;
+    mapRare: boolean;
+    corrupted: string;
+    quantity: string;
+    optimizeQuantity: boolean;
+    packSize: string;
+    optimizePack: boolean;
+    scarabs: string;
+    optimizeScarab: boolean;
+    maps: string;
+    optimizeMaps: boolean;
+    currency: string;
+    optimizeCurrency: boolean;
+    rarity: string;
+    optimizeRarity: boolean;
+    regex: string;
 }
 
 function captureState(profileName?: string): ConfigState {
     const g = (id: string) => document.getElementById(id) as HTMLInputElement;
     return {
-        profileName:     profileName ?? activeProfile,
-        t17:             g('t17').checked,
-        vaal:            g('vaal').checked,
-        implicit:        g('implicit').checked,
-        any:             g('any').checked,
-        mapsInclude:     g('maps-include').checked,
-        mapNormal:       g('map-normal').checked,
-        mapMagic:        g('map-magic').checked,
-        mapRare:         g('map-rare').checked,
-        corrupted:       localStorage.getItem('corrupted') ?? 'corrupted-ignore',
-        quantity:        g('quantity').value,   optimizeQuantity: g('optimize-quantity').checked,
-        packSize:        g('pack-size').value,  optimizePack:     g('optimize-pack').checked,
-        scarabs:         g('scarabs').value,    optimizeScarab:   g('optimize-scarab').checked,
-        maps:            g('maps').value,       optimizeMaps:     g('optimize-maps').checked,
-        currency:        g('currency').value,   optimizeCurrency: g('optimize-currency').checked,
-        rarity:          g('rarity').value,     optimizeRarity:   g('optimize-rarity').checked,
-        regex:           document.getElementById('regex')!.innerText,
+        profileName: profileName ?? activeProfile,
+        t17: g('t17').checked,
+        vaal: g('vaal').checked,
+        implicit: g('implicit').checked,
+        any: g('any').checked,
+        mapsInclude: g('maps-include').checked,
+        mapNormal: g('map-normal').checked,
+        mapMagic: g('map-magic').checked,
+        mapRare: g('map-rare').checked,
+        corrupted: localStorage.getItem('corrupted') ?? 'corrupted-ignore',
+        quantity: g('quantity').value, optimizeQuantity: g('optimize-quantity').checked,
+        packSize: g('pack-size').value, optimizePack: g('optimize-pack').checked,
+        scarabs: g('scarabs').value, optimizeScarab: g('optimize-scarab').checked,
+        maps: g('maps').value, optimizeMaps: g('optimize-maps').checked,
+        currency: g('currency').value, optimizeCurrency: g('optimize-currency').checked,
+        rarity: g('rarity').value, optimizeRarity: g('optimize-rarity').checked,
+        regex: document.getElementById('regex')!.innerText,
     };
 }
 
@@ -855,27 +903,39 @@ function applyState(state: ConfigState): void {
         (document.getElementById(id) as HTMLInputElement).value = val;
     };
 
-    setChecked('t17',      state.t17);      toggle('t17',      state.t17);
-    setChecked('vaal',     state.vaal);     toggle('vaal',     state.vaal);
-    setChecked('implicit', state.implicit); toggle('implicit', state.implicit);
+    setChecked('t17', state.t17);
+    toggle('t17', state.t17);
+    setChecked('vaal', state.vaal);
+    toggle('vaal', state.vaal);
+    setChecked('implicit', state.implicit);
+    toggle('implicit', state.implicit);
     setChecked('any', state.any);
     setChecked('all', !state.any);
 
     setChecked('maps-include', state.mapsInclude);
     setChecked('maps-exclude', !state.mapsInclude);
     setChecked('map-normal', state.mapNormal);
-    setChecked('map-magic',  state.mapMagic);
-    setChecked('map-rare',   state.mapRare);
+    setChecked('map-magic', state.mapMagic);
+    setChecked('map-rare', state.mapRare);
 
     const corruptedEl = document.getElementById(state.corrupted) as HTMLInputElement | null;
-    if (corruptedEl) { corruptedEl.checked = true; handleCheckboxChange(corruptedEl); }
+    if (corruptedEl) {
+        corruptedEl.checked = true;
+        handleCheckboxChange(corruptedEl);
+    }
 
-    setValue('quantity',  state.quantity);  setChecked('optimize-quantity', state.optimizeQuantity);
-    setValue('pack-size', state.packSize);  setChecked('optimize-pack',     state.optimizePack);
-    setValue('scarabs',   state.scarabs);   setChecked('optimize-scarab',   state.optimizeScarab);
-    setValue('maps',      state.maps);      setChecked('optimize-maps',     state.optimizeMaps);
-    setValue('currency',  state.currency);  setChecked('optimize-currency', state.optimizeCurrency);
-    setValue('rarity',    state.rarity);    setChecked('optimize-rarity',   state.optimizeRarity);
+    setValue('quantity', state.quantity);
+    setChecked('optimize-quantity', state.optimizeQuantity);
+    setValue('pack-size', state.packSize);
+    setChecked('optimize-pack', state.optimizePack);
+    setValue('scarabs', state.scarabs);
+    setChecked('optimize-scarab', state.optimizeScarab);
+    setValue('maps', state.maps);
+    setChecked('optimize-maps', state.optimizeMaps);
+    setValue('currency', state.currency);
+    setChecked('optimize-currency', state.optimizeCurrency);
+    setValue('rarity', state.rarity);
+    setChecked('optimize-rarity', state.optimizeRarity);
 
     if (state.regex) {
         document.getElementById('regex')!.innerText = state.regex;
@@ -938,19 +998,19 @@ function unpackState(b64: string): ConfigState | null {
 
         const bit = (n: number) => Boolean(bits & (1 << n));
         return {
-            profileName:     typeof profileName === 'string' ? profileName : 'imported',
-            t17:             bit(0),  vaal:        bit(1),  implicit:    bit(2),  any:        bit(3),
-            mapsInclude:     bit(4),  mapNormal:   bit(5),  mapMagic:    bit(6),  mapRare:    bit(7),
-            optimizeQuantity:bit(8),  optimizePack:bit(9),  optimizeScarab:bit(10), optimizeMaps:bit(11),
-            optimizeCurrency:bit(12), optimizeRarity:bit(13),
-            corrupted:       CORRUPT_FROM_IDX[corrIdx] ?? 'corrupted-ignore',
-            quantity:        qty  ?? '',
-            packSize:        pack ?? '',
-            scarabs:         scar ?? '',
-            maps:            maps ?? '',
-            currency:        curr ?? '',
-            rarity:          rar  ?? '',
-            regex:           regex ?? '',
+            profileName: typeof profileName === 'string' ? profileName : 'imported',
+            t17: bit(0), vaal: bit(1), implicit: bit(2), any: bit(3),
+            mapsInclude: bit(4), mapNormal: bit(5), mapMagic: bit(6), mapRare: bit(7),
+            optimizeQuantity: bit(8), optimizePack: bit(9), optimizeScarab: bit(10), optimizeMaps: bit(11),
+            optimizeCurrency: bit(12), optimizeRarity: bit(13),
+            corrupted: CORRUPT_FROM_IDX[corrIdx] ?? 'corrupted-ignore',
+            quantity: qty ?? '',
+            packSize: pack ?? '',
+            scarabs: scar ?? '',
+            maps: maps ?? '',
+            currency: curr ?? '',
+            rarity: rar ?? '',
+            regex: regex ?? '',
         };
     } catch {
         return null;
@@ -967,12 +1027,14 @@ function openExportModal(): void {
 }
 
 function copyExportString(): void {
-    const ta  = document.getElementById('export-string') as HTMLTextAreaElement;
+    const ta = document.getElementById('export-string') as HTMLTextAreaElement;
     const btn = document.getElementById('export-copy')!;
     navigator.clipboard.writeText(ta.value).then(() => {
         const orig = btn.textContent;
         btn.textContent = 'Copied!';
-        setTimeout(() => { btn.textContent = orig; }, 1500);
+        setTimeout(() => {
+            btn.textContent = orig;
+        }, 1500);
     }).catch(() => {
         ta.select();
         document.execCommand('copy');
@@ -980,7 +1042,7 @@ function copyExportString(): void {
 }
 
 function importFromExportString(): void {
-    const ta    = document.getElementById('export-import-string') as HTMLTextAreaElement;
+    const ta = document.getElementById('export-import-string') as HTMLTextAreaElement;
     const state = unpackState(ta.value.trim());
     if (!state) {
         alert('Invalid export string — please paste a valid export string and try again.');
@@ -1037,7 +1099,7 @@ function setActiveProfile(name: string): void {
 
 function saveProfile(): void {
     const input = document.getElementById('profile-name-input') as HTMLInputElement;
-    const name  = input.value.trim() || activeProfile;
+    const name = input.value.trim() || activeProfile;
     const state = captureState(name);
     localStorage.setItem(PROFILE_KEY_PREFIX + name, packState(state));
     setActiveProfile(name);
@@ -1046,10 +1108,13 @@ function saveProfile(): void {
 }
 
 function loadProfile(name: string): void {
-    const raw   = localStorage.getItem(PROFILE_KEY_PREFIX + name);
+    const raw = localStorage.getItem(PROFILE_KEY_PREFIX + name);
     if (!raw) return;
     const state = unpackState(raw);
-    if (!state) { alert('Profile data is corrupted and cannot be loaded.'); return; }
+    if (!state) {
+        alert('Profile data is corrupted and cannot be loaded.');
+        return;
+    }
     wipe();
     applyState(state);
     setActiveProfile(name);
@@ -1057,7 +1122,10 @@ function loadProfile(name: string): void {
 }
 
 function deleteProfile(name: string): void {
-    if (name === 'default') { alert('The "default" profile cannot be deleted.'); return; }
+    if (name === 'default') {
+        alert('The "default" profile cannot be deleted.');
+        return;
+    }
     if (!confirm(`Delete profile "${name}"?`)) return;
     localStorage.removeItem(PROFILE_KEY_PREFIX + name);
     if (activeProfile === name) setActiveProfile('default');
@@ -1089,14 +1157,14 @@ function renderProfileList(): void {
 
         const loadBtn = document.createElement('button');
         loadBtn.textContent = isActive ? 'Active' : 'Load';
-        loadBtn.className   = 'styled-button';
-        loadBtn.disabled    = isActive;
+        loadBtn.className = 'styled-button';
+        loadBtn.disabled = isActive;
         loadBtn.style.cssText = `padding:6px 14px;font-size:13px;flex-shrink:0;${isActive ? 'opacity:.5;cursor:default' : ''}`;
         if (!isActive) loadBtn.addEventListener('click', () => loadProfile(name));
 
         const delBtn = document.createElement('button');
         delBtn.textContent = '✕';
-        delBtn.className   = 'styled-button header-button';
+        delBtn.className = 'styled-button header-button';
         delBtn.style.cssText = 'padding:6px 10px;font-size:13px;flex-shrink:0';
         delBtn.title = name === 'default' ? 'Cannot delete default profile' : `Delete "${name}"`;
         delBtn.addEventListener('click', () => deleteProfile(name));

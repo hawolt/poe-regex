@@ -35,8 +35,8 @@ export abstract class Filter {
     /** Returns true if this modifier should be skipped given current checkbox state */
     protected isIgnored(mod: Modifier): boolean {
         if (mod.isImplicit() && !this.implicit) return true;
-        if (mod.isVaal()     && !this.vaal)     return true;
-        if (mod.isT17()      && !this.t17)      return true;
+        if (mod.isVaal() && !this.vaal) return true;
+        if (mod.isT17() && !this.t17) return true;
         return false;
     }
 

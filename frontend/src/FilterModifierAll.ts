@@ -13,7 +13,7 @@ export class FilterModifierAll extends Filter {
             const modifier = this.modifiers[i];
             if (this.isIgnored(modifier)) continue;
 
-            const valid    = modifier.getModifier().toLowerCase().includes(substring.toLowerCase());
+            const valid = modifier.getModifier().toLowerCase().includes(substring.toLowerCase());
             const required = this.includes(modifier, modifiers);
 
             if ((!required && valid) || (required && !valid)) {
@@ -71,8 +71,8 @@ export class FilterModifierAll extends Filter {
 
             // build exception list: mods that textually contain or are contained by this modifier
             for (const i in this.modifiers) {
-                const mod      = this.modifiers[i];
-                const direct   = modifier.getModifier().toLowerCase().includes(mod.getModifier().toLowerCase());
+                const mod = this.modifiers[i];
+                const direct = modifier.getModifier().toLowerCase().includes(mod.getModifier().toLowerCase());
                 const reversed = mod.getModifier().toLowerCase().includes(modifier.getModifier().toLowerCase());
                 if (direct || reversed) exception.push(mod);
             }
@@ -113,7 +113,7 @@ export class FilterModifierAll extends Filter {
                 console.log(`[All.create]   top match: "${matches[0]}"`);
                 try {
                     const optimized = this.optimize(matches[0], exception);
-                    const ideal     = optimized.getIdealResult();
+                    const ideal = optimized.getIdealResult();
                     console.log(`[All.create]   → result: "${ideal}"`);
                     result.add(ideal);
                 } catch (e) {
