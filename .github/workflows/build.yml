@@ -7,37 +7,41 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Build the project
-      run: npm run build
-
-    - name: Commit and push bundle.js
-      run: |
-        git checkout dev
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add public/bundle.js
-        if git diff --cached --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "Build: update bundle.js"
-          git push origin dev
-        fi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: frontend
+  
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+  
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+  
+      - name: Install dependencies
+        run: npm install
+  
+      - name: Build the project
+        run: npm run build
+  
+      - name: Commit and push bundle.js
+        working-directory: ${{ github.workspace }}
+        run: |
+          git checkout dev
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add frontend/public/bundle.js
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Build: update bundle.js"
+            git push origin dev
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-map-affix-config:
     runs-on: ubuntu-latest
