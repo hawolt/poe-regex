@@ -46,6 +46,27 @@ export class FilterModifierAny extends Filter {
             return;
         }
 
+        // Short-circuit: any mod with a fallback defined goes directly into result,
+        // only mods without a fallback go through the full substring generation.
+        if (failsafe === 0) {
+            const withFallback    = required.filter(m => !!m.getFallback());
+            const withoutFallback = required.filter(m => !m.getFallback());
+
+            if (withFallback.length > 0) {
+                for (const mod of withFallback) {
+                    const fb = mod.getFallback()!;
+                    console.warn(`[Any.create] short-circuit fallback for idx=${mod.getIndex()}: "${fb}"`);
+                    result.add(fb);
+                }
+                if (withoutFallback.length === 0) {
+                    console.log(`[Any.create] all mods had fallbacks, done`);
+                    return;
+                }
+                // Continue with only the mods that still need generation
+                required = withoutFallback;
+            }
+        }
+
         console.log(`[Any.create] ── fs=${failsafe} required=${required.length} result=${result.size} ──`);
         required.forEach((m, i) => console.log(`  req[${i}]: idx=${m.getIndex()} t17=${m.isT17()} vaal=${m.isVaal()} impl=${m.isImplicit()} "${m.getModifier()}"`));
 
@@ -130,6 +151,28 @@ export class FilterModifierAny extends Filter {
 
         const proposed = entries.length > 0 ? entries[0][0] : null;
         console.log(`[Any.create] proposed="${proposed ?? 'null'}"`);
+
+        if (proposed === null) {
+            // No substring candidates — fall back to per-modifier fallback strings.
+            const fallbacks = required
+                .map(m => m.getFallback())
+                .filter((f): f is string => !!f);
+
+            if (fallbacks.length === 0) {
+                console.error(`[Any.create] FAILED — no candidates and no fallbacks for required mods`);
+                return;
+            }
+
+            const unique = [...new Set(fallbacks)];
+            if (unique.length === 1) {
+                console.warn(`[Any.create] using shared fallback: "${unique[0]}"`);
+                result.add(unique[0]);
+            } else {
+                console.warn(`[Any.create] using per-mod fallbacks:`, unique);
+                unique.forEach(f => result.add(f));
+            }
+            return;
+        }
 
         let ideal: string;
         let expression: RegExp;

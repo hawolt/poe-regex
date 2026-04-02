@@ -77,7 +77,7 @@ async function loadModifiers(): Promise<void> {
     const fallbacks = new Map<string, string>();
     for (const raw of fallbackText.split("\n")) {
         const line = raw.trim();
-        if (!line || line.startsWith('#')) continue;
+        if (!line || line.startsWith('##')) continue;
         const eq = line.indexOf('=');
         if (eq === -1) continue;
         const key = line.substring(0, eq).trim();
