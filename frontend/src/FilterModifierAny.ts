@@ -41,13 +41,13 @@ export class FilterModifierAny extends Filter {
         if (failsafe > 50) {
             console.error(`[Any.create] DEADLOCK GUARD hit at failsafe=${failsafe}. Bailing out.`);
             console.error(`[Any.create] Remaining required (${required.length}):`);
-            required.forEach(m => console.error(`  - "${m.getModifier().substring(0, 80)}"`));
+            required.forEach(m => console.error(`  - "${m.getModifier()}"`));
             console.error(`[Any.create] Current result set (${result.size}):`, Array.from(result));
             return;
         }
 
         console.log(`[Any.create] ── fs=${failsafe} required=${required.length} result=${result.size} ──`);
-        required.forEach((m, i) => console.log(`  req[${i}]: idx=${m.getIndex()} t17=${m.isT17()} vaal=${m.isVaal()} impl=${m.isImplicit()} "${m.getModifier().substring(0, 70)}"`));
+        required.forEach((m, i) => console.log(`  req[${i}]: idx=${m.getIndex()} t17=${m.isT17()} vaal=${m.isVaal()} impl=${m.isImplicit()} "${m.getModifier()}"`));
 
         // upgrade: add group-associated and line-related mods so substring uniqueness
         // is checked against all tier-variants and supermods.
@@ -61,11 +61,11 @@ export class FilterModifierAny extends Filter {
         // unrelated to the user's selection.
         if (failsafe === 0) {
             const beforeUpgrade = required.length;
-            required = association.upgrade(this.t17, required, this.modifiers, result);
+            required = association.upgrade(this.t17, this.vaal, this.implicit, required, this.modifiers, result);
             console.log(`[Any.create] upgrade: ${beforeUpgrade} → ${required.length} mods`);
             if (required.length > beforeUpgrade) {
                 required.slice(beforeUpgrade).forEach((m, i) =>
-                    console.log(`  +added[${i}]: idx=${m.getIndex()} t17=${m.isT17()} "${m.getModifier().substring(0, 60)}"`)
+                    console.log(`  +added[${i}]: idx=${m.getIndex()} t17=${m.isT17()} "${m.getModifier()}"`)
                 );
             }
         } else {
@@ -124,7 +124,7 @@ export class FilterModifierAny extends Filter {
         } else {
             console.warn(`[Any.create] NO candidates found!`);
             console.warn(`[Any.create] required mods were:`);
-            required.forEach(m => console.warn(`  "${m.getModifier().substring(0, 80)}"`));
+            required.forEach(m => console.warn(`  "${m.getModifier()}"`));
             console.warn(`[Any.create] current result:`, Array.from(result));
         }
 
@@ -150,8 +150,8 @@ export class FilterModifierAny extends Filter {
         required = required.filter(modifier => {
             const lines = modifier.getModifier().toLowerCase().split('\\n');
             const matched = lines.some(line => expression.test(line));
-            if (matched) console.log(`  [filter] REMOVED idx=${modifier.getIndex()} "${modifier.getModifier().substring(0, 60)}"`);
-            else console.log(`  [filter] kept    idx=${modifier.getIndex()} "${modifier.getModifier().substring(0, 60)}"`);
+            if (matched) console.log(`  [filter] REMOVED idx=${modifier.getIndex()} "${modifier.getModifier()}"`);
+            else console.log(`  [filter] kept    idx=${modifier.getIndex()} "${modifier.getModifier()}"`);
             return !matched;
         });
         console.log(`[Any.create] filter: ${beforeFilter} → ${required.length} remaining`);

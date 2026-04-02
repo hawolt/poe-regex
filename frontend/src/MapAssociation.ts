@@ -15,16 +15,23 @@ export class MapAssociation {
         return aLines.some(al => bLines.includes(al));
     }
 
-    public upgrade(t17: boolean, required: Modifier[], allModifiers: Modifier[], result: Set<string>): Modifier[] {
+    public upgrade(t17: boolean, vaal: boolean, implicit: boolean, required: Modifier[], allModifiers: Modifier[], result: Set<string>): Modifier[] {
         const set = new Set(required);
 
         // ── Pass 1: group-based transitive expansion ──────────────────────────
         // Walk the group association map transitively. Only add mods that share
         // at least one line with the mod being processed — group members with
-        // no line overlap (e.g. Drowning Orbs and Sawblades sharing a group) are
-        // UI siblings only and must not enter required or constrain regex generation.
+        // no line overlap are UI siblings only and must not constrain regex generation.
         const queue: Modifier[] = [...required];
         const visited = new Set<number>(required.map(m => m.getIndex()));
+
+        // The original required mods — used as the anchor for line-overlap checks.
+        // A group-related mod should only be added if it shares at least one line
+        // with the ORIGINAL selection, not just with an intermediary (e.g. a supermod).
+        // Without this, selecting "Monsters fire additional Projectiles" would pull in
+        // "Monsters have increased Area of Effect" via the supermod that bundles both —
+        // even though "Area of Effect" has nothing to do with the original selection.
+        const originalRequired = new Set(required.map(m => m.getIndex()));
 
         while (queue.length > 0) {
             const modifier = queue.shift()!;
@@ -68,8 +75,25 @@ export class MapAssociation {
                     continue;
                 }
 
-                if (!this.hasLineOverlap(modifier, association)) {
-                    console.log(`[MapAssociation.upgrade]   skip idx=${relatedIndex} (no line overlap, UI-only): "${association.getModifier().substring(0, 50)}"`);
+                // Check overlap against ORIGINAL required mods only, not the current
+                // queue item. This prevents group siblings of a supermod from being
+                // pulled in just because they share a line with the supermod itself.
+                const overlapsOriginal = Array.from(originalRequired).some(origIdx => {
+                    const orig = allModifiers[origIdx];
+                    return orig && this.hasLineOverlap(orig, association);
+                });
+                // Also allow the association itself to be a supermod of an original mod
+                // (i.e. original mod's lines are a subset of the association's lines)
+                const isSupermod = Array.from(originalRequired).some(origIdx => {
+                    const orig = allModifiers[origIdx];
+                    if (!orig) return false;
+                    const origLines = orig.getModifier().toLowerCase().split('\\n').map(l => l.trim());
+                    const assocLines = association.getModifier().toLowerCase().split('\\n').map(l => l.trim());
+                    return origLines.every(l => assocLines.includes(l));
+                });
+
+                if (!overlapsOriginal && !isSupermod) {
+                    console.log(`[MapAssociation.upgrade]   skip idx=${relatedIndex} (no overlap with original selection): "${association.getModifier().substring(0, 50)}"`);
                     continue;
                 }
 
@@ -81,23 +105,29 @@ export class MapAssociation {
 
         // ── Pass 2: line-intersection expansion ───────────────────────────────
         // Catches mods that share a line with the originally selected mods but have
-        // no group association, e.g. the T17 curse supermod that bundles lines from
-        // individually grouped curse mods.
+        // no group association, e.g. the T17 supermod bundling lines from individually
+        // grouped mods.
         //
-        // IMPORTANT: we only match candidates against the mods that were in `required`
-        // at the START of Pass 2 (i.e. after Pass 1, but before any Pass 2 additions).
-        // We do NOT iterate to fixpoint — doing so would cause transitive pulls:
-        //   "more Monster Life" → pulls in "Stunned\nmore Monster Life" (correct)
-        //   → fixpoint would then match "Stunned\nmore Monster Life"'s lines against
-        //     the 3-line supermod containing "Monsters cannot be Stunned" (wrong —
-        //     that supermod has nothing to do with "more Monster Life")
+        // We do NOT iterate to fixpoint — only direct line matches against the
+        // anchor set (original required + Pass 1 additions) are considered.
         //
-        // The anchor set is fixed at the start so only direct line matches against
-        // the user's actual selection (plus Pass 1 additions) are considered.
+        // Additionally, we skip any candidate whose lines are ALL already contained
+        // within a mod already in the set — such candidates are proper subsets and
+        // will always be matched by any token that matches the superset mod. Adding
+        // them to required would force the filter to generate a second redundant token.
+        // Example: selecting "Monsters cannot be Stunned\n#% more Monster Life" should
+        // NOT pull in the single-line "#% more Monster Life" — the supermod already
+        // covers it, and the supermod has a unique line ("cannot be Stunned") that can
+        // serve as its regex token.
         const anchorSet = Array.from(set); // snapshot before Pass 2 adds anything
 
         for (const candidate of allModifiers) {
             if (visited.has(candidate.getIndex())) continue;
+
+            // Skip candidates that would be ignored by the filter — same gate as Pass 1.
+            if (candidate.isT17()      && !t17)      continue;
+            if (candidate.isVaal()     && !vaal)     continue;
+            if (candidate.isImplicit() && !implicit) continue;
 
             const alreadyInSet = Array.from(set).some(
                 existing => existing.getModifier() === candidate.getModifier()
@@ -114,13 +144,26 @@ export class MapAssociation {
 
             const candidateLines = candidate.getModifier().toLowerCase().split('\\n').map(l => l.trim());
 
-            // Only check against the anchor set (original required + Pass 1 additions)
-            const hasOverlap = anchorSet.some(anchor => {
+            // Skip if candidate is a proper subset of any mod already in the set —
+            // every one of its lines appears in some existing set member.
+            const isSubsetOfExisting = Array.from(set).some(existing => {
+                const existingLines = existing.getModifier().toLowerCase().split('\\n').map(l => l.trim());
+                return candidateLines.every(cl => existingLines.includes(cl));
+            });
+            if (isSubsetOfExisting) {
+                console.log(`[MapAssociation.upgrade]   skip idx=${candidate.getIndex()} (subset of existing set member): "${candidate.getModifier().substring(0, 60)}"`);
+                continue;
+            }
+
+            // Only add if an anchor mod's lines are all contained in the candidate
+            // (candidate is a supermod of an anchor — selecting it means the anchor
+            // would always be matched by any regex token for the candidate).
+            const subsetRelationship = anchorSet.some(anchor => {
                 const anchorLines = anchor.getModifier().toLowerCase().split('\\n').map(l => l.trim());
-                return anchorLines.some(al => candidateLines.includes(al));
+                return anchorLines.every(al => candidateLines.includes(al));
             });
 
-            if (hasOverlap) {
+            if (subsetRelationship) {
                 console.log(`[MapAssociation.upgrade]   +add (line) idx=${candidate.getIndex()} t17=${candidate.isT17()} "${candidate.getModifier().substring(0, 60)}"`);
                 visited.add(candidate.getIndex());
                 set.add(candidate);

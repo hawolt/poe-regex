@@ -19,7 +19,7 @@ let modifiers: Modifier[] = [];
 let exclusive: Modifier[] = [];
 let inclusive: Modifier[] = [];
 
-// Built once in buildModifiers for O(1) group-member lookup in toggleGroupMembers.
+// Built once in buildModifiers for O(1) group-member lookup in recomputeDisabled.
 let assocMap: Map<number, number[]> = new Map();
 
 let userHideSet:   Set<string>           = new Set();
@@ -137,7 +137,7 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
         return true;
     });
 
-    // Build group associations → O(1) Map for toggleGroupMembers
+    // Build group associations → O(1) Map for recomputeDisabled
     const groupToIndices = new Map<string, number[]>();
     for (let i = 0; i < visibleEntries.length; i++) {
         for (const g of visibleEntries[i].groups) {
@@ -157,7 +157,7 @@ function buildModifiers(config: Record<string, any[]>, fallbacks: Map<string, st
             }
         }
     }
-    // Populate both the local Map (for toggleGroupMembers) and the Global array (for MapAssociation)
+    // Populate both the local Map (for recomputeDisabled) and the Global array (for MapAssociation)
     associations.length = 0;
     for (const [k, v] of assocSet) {
         const arr = Array.from(v);
@@ -260,7 +260,7 @@ function createSelectableContainer(index: number, type: ModifierType, modifier: 
         const array  = type === ModifierType.EXCLUSIVE ? exclusive : inclusive;
         disableCounterpart(index, active, type, modifier);
         handleModifierSelection(active, array, modifier);
-        toggleGroupMembers(index, active);
+        recomputeDisabled();
         const optimizeChecked = (document.getElementById('optimize') as HTMLInputElement).checked;
         console.log(`[click] idx=${index} active=${active} excl=${exclusive.length} incl=${inclusive.length}`);
         if (!optimizeChecked) modal('loading-modal', true);
@@ -286,10 +286,12 @@ function disableCounterpart(index: number, active: boolean, type: ModifierType, 
     }
 }
 
-// Traverse the group/line-relation graph from `index` and toggle disabled-item
-// on all reachable mods. Only traverses mods that are currently visible
-// (respects t17/vaal/implicit checkbox state at call time).
-function toggleGroupMembers(index: number, active: boolean): void {
+// Recomputes all disabled-item states from scratch based on the full current
+// selection. A mod is disabled if every one of its lines is already covered by
+// the union of all currently selected mods — meaning it has no unique line left
+// that could distinguish it from the current selection in a regex.
+// Also disables the same mod in the opposite column (counterpart).
+function recomputeDisabled(): void {
     const t17On      = (document.getElementById('t17')      as HTMLInputElement).checked;
     const vaalOn     = (document.getElementById('vaal')     as HTMLInputElement).checked;
     const implicitOn = (document.getElementById('implicit') as HTMLInputElement).checked;
@@ -297,31 +299,51 @@ function toggleGroupMembers(index: number, active: boolean): void {
     const isVisible = (mod: Modifier) =>
         !(mod.isT17() && !t17On) && !(mod.isVaal() && !vaalOn) && !(mod.isImplicit() && !implicitOn);
 
-    const visited = new Set<number>([index]);
-    const queue   = [index];
+    // Clear all current disabled states (except selected-item — those are correct)
+    document.querySelectorAll('.disabled-item').forEach(el => el.classList.remove('disabled-item'));
 
-    // Seed with direct line-relations of the origin mod
-    for (const r of (lineRelations.get(index) ?? [])) {
-        if (visited.has(r)) continue;
-        const rel = modifiers[r];
-        if (rel && isVisible(rel)) { visited.add(r); queue.push(r); }
-    }
-
-    // BFS over group associations (O(1) Map lookup)
-    while (queue.length > 0) {
-        const cur = queue.shift()!;
-        for (const r of (assocMap.get(cur) ?? [])) {
-            if (visited.has(r)) continue;
-            const rel = modifiers[r];
-            if (rel && isVisible(rel)) { visited.add(r); queue.push(r); }
+    // Re-disable counterparts (same mod in opposite column)
+    const selectedIndices = new Set([...exclusive, ...inclusive].map(m => m.getIndex()));
+    for (const [type, array] of [[ModifierType.EXCLUSIVE, exclusive], [ModifierType.INCLUSIVE, inclusive]] as [ModifierType, Modifier[]][]) {
+        const col = type === ModifierType.EXCLUSIVE ? 'inclusive' : 'exclusive';
+        for (const mod of array) {
+            document.querySelector(`#${col} .selectable[data-mod="${mod.getIndex()}"]`)?.classList.add('disabled-item');
         }
     }
 
+    if (!exclusive.length && !inclusive.length) return;
+
+    // Build the set of lines covered by ALL currently selected mods combined
+    const coveredLines = new Set<string>();
+    for (const mod of [...exclusive, ...inclusive]) {
+        for (const l of mod.getModifier().toLowerCase().split('\\n').map(l => l.trim())) {
+            coveredLines.add(l);
+        }
+    }
+
+    // Collect all mods reachable via line-relations from any selected mod
+    const visited = new Set<number>(selectedIndices);
+    const queue   = [...selectedIndices];
+    while (queue.length > 0) {
+        const cur = queue.shift()!;
+        for (const r of (lineRelations.get(cur) ?? [])) {
+            if (visited.has(r)) continue;
+            visited.add(r);
+            const rel = modifiers[r];
+            if (rel && isVisible(rel)) queue.push(r);
+        }
+    }
+
+    // Disable any reachable mod whose every line is covered by the selection
     for (const r of visited) {
-        if (r === index) continue;
-        for (const col of ['exclusive', 'inclusive']) {
-            const el = document.querySelector(`#${col} .selectable[data-mod="${r}"]`);
-            if (el) el.classList.toggle('disabled-item', active);
+        if (selectedIndices.has(r)) continue;
+        const rel = modifiers[r];
+        if (!rel || !isVisible(rel)) continue;
+        const relLines = rel.getModifier().toLowerCase().split('\\n').map(l => l.trim());
+        if (relLines.every(l => coveredLines.has(l))) {
+            for (const col of ['exclusive', 'inclusive']) {
+                document.querySelector(`#${col} .selectable[data-mod="${r}"]`)?.classList.add('disabled-item');
+            }
         }
     }
 }
@@ -397,14 +419,14 @@ function restoreSelectionsFromRegex(savedRegex: string): void {
             const modIndex = Number(child.dataset.mod);
             const modifier = modifiers.find(m => m.getIndex() === modIndex);
             if (!modifier) continue;
-            child.classList.toggle('selected-item');
-            const active = child.classList.contains('selected-item');
-            const type   = containerId === 'exclusive' ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE;
-            disableCounterpart(modIndex, active, type, modifier);
-            handleModifierSelection(active, type === ModifierType.EXCLUSIVE ? exclusive : inclusive, modifier);
-            toggleGroupMembers(modIndex, active);
+            child.classList.add('selected-item');
+            const type = containerId === 'exclusive' ? ModifierType.EXCLUSIVE : ModifierType.INCLUSIVE;
+            disableCounterpart(modIndex, true, type, modifier);
+            handleModifierSelection(true, type === ModifierType.EXCLUSIVE ? exclusive : inclusive, modifier);
         }
     }
+    // Recompute all disabled states once after all selections are restored
+    recomputeDisabled();
 }
 
 // ─── Regex Generation ─────────────────────────────────────────────────────────
@@ -415,10 +437,10 @@ function rollbackLastMod(type: ModifierType): void {
     const mod = array[array.length - 1];
     console.warn(`[rollback] ${ModifierType[type]} idx=${mod.getIndex()} "${mod.getModifier().substring(0, 60)}"`);
     handleModifierSelection(false, array, mod);
-    toggleGroupMembers(mod.getIndex(), false);
     disableCounterpart(mod.getIndex(), false, type, mod);
     const col = type === ModifierType.EXCLUSIVE ? 'exclusive' : 'inclusive';
     document.querySelector(`#${col} .selectable[data-mod="${mod.getIndex()}"]`)?.classList.remove('selected-item');
+    recomputeDisabled();
     selection.delete(type);
     cache.delete(type);
 }
@@ -673,27 +695,11 @@ function setup(): void {
                 inclusive = inclusive.filter(m => !isOfType(m));
             }
 
-            // Update visibility first so toggleGroupMembers reads the new state
+            // Update visibility first so recomputeDisabled reads the new state
             toggle(attr, checked);
 
-            // Wipe all disabled-item and reapply from remaining selections.
-            // This correctly handles both directions:
-            //   unchecking — bridges through now-hidden mods no longer exist
-            //   checking   — newly visible mods may now be reachable and need disabling
-            document.querySelectorAll('.disabled-item').forEach(el => el.classList.remove('disabled-item'));
-
-            // Restore counterpart disabled-item (same mod in opposite column)
-            for (const [type, array] of [[ModifierType.EXCLUSIVE, exclusive], [ModifierType.INCLUSIVE, inclusive]] as [ModifierType, Modifier[]][]) {
-                const col = type === ModifierType.EXCLUSIVE ? 'inclusive' : 'exclusive';
-                for (const mod of array) {
-                    document.querySelector(`#${col} .selectable[data-mod="${mod.getIndex()}"]`)?.classList.add('disabled-item');
-                }
-            }
-
-            // Restore group-member disabled-item
-            for (const array of [exclusive, inclusive]) {
-                for (const mod of array) toggleGroupMembers(mod.getIndex(), true);
-            }
+            // Rebuild all disabled states from scratch for the new visibility context
+            recomputeDisabled();
 
             selection.clear();
             cache.clear();
