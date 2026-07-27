@@ -16,7 +16,6 @@ public class Generator {
     private static final String OUTPUT_PATH = "map.mod.config.json";
     private static final String[] REQUIRED_TAGS = {"default", "low_tier_map", "mid_tier_map", "top_tier_map", "uber_tier_map", "implicit"};
 
-    // "[ContainsAbyss|Abysses]" -> "Abysses", "[Fire]" -> "Fire"
     private static final Pattern DESCRIPTOR = Pattern.compile("\\[([^\\[\\]]*)]");
 
     private static final Map<String, String> TRANSLATION = new HashMap<>() {{
@@ -92,11 +91,6 @@ public class Generator {
         maps.computeIfAbsent(tag, k -> new ArrayList<>()).add(modifier);
     }
 
-    /**
-     * Upstream text references stats as "[identifier|display text]", where only the display text
-     * is what the game actually renders. Substitute the whole block with the second element, or
-     * with the sole element when no display text is supplied.
-     */
     private static String substitute(String text) {
         Matcher matcher = DESCRIPTOR.matcher(text);
         StringBuilder builder = new StringBuilder();
