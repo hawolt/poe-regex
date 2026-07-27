@@ -7,12 +7,16 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Generator {
 
     private static final String MODS_URL = "https://repoe-fork.github.io/mods.min.json";
     private static final String OUTPUT_PATH = "map.mod.config.json";
     private static final String[] REQUIRED_TAGS = {"default", "low_tier_map", "mid_tier_map", "top_tier_map", "uber_tier_map", "implicit"};
+
+    private static final Pattern DESCRIPTOR = Pattern.compile("\\[([^\\[\\]]*)]");
 
     private static final Map<String, String> TRANSLATION = new HashMap<>() {{
         put("#% increased Pack size", "PACKSIZE");
@@ -57,7 +61,7 @@ public class Generator {
         Modifier modifier = new Modifier();
         modifier.setGenerationType(generationType);
         modifier.setOrigin("implicit");
-        for (String affix : entry.getString("text").replaceAll("\\d+", "#").split("\n")) {
+        for (String affix : substitute(entry.getString("text")).replaceAll("\\d+", "#").split("\n")) {
             modifier.addAffix(affix);
         }
         maps.computeIfAbsent("implicit", k -> new ArrayList<>()).add(modifier);
@@ -77,7 +81,7 @@ public class Generator {
             modifier.addGroup(groups.getString(j));
         }
 
-        for (String line : entry.getString("text").replaceAll("\\d+", "#").replaceAll("\\(#-#\\)", "#").split("\n")) {
+        for (String line : substitute(entry.getString("text")).replaceAll("\\d+", "#").replaceAll("\\(#-#\\)", "#").split("\n")) {
             if (TRANSLATION.containsKey(line)) {
                 modifier.addTag(TRANSLATION.get(line));
             } else {
@@ -85,6 +89,18 @@ public class Generator {
             }
         }
         maps.computeIfAbsent(tag, k -> new ArrayList<>()).add(modifier);
+    }
+
+    private static String substitute(String text) {
+        Matcher matcher = DESCRIPTOR.matcher(text);
+        StringBuilder builder = new StringBuilder();
+        while (matcher.find()) {
+            String[] parts = matcher.group(1).split("\\|", -1);
+            String display = parts.length > 1 && !parts[1].isEmpty() ? parts[1] : parts[0];
+            matcher.appendReplacement(builder, Matcher.quoteReplacement(display));
+        }
+        matcher.appendTail(builder);
+        return builder.toString();
     }
 
     private static JSONObject buildOutput(Map<String, List<Modifier>> maps) {
