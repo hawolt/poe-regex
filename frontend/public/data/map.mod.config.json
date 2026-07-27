@@ -299,7 +299,7 @@
     },
     {
       "groups": ["EverythingEverywhere"],
-      "text": "Areas can contain Abysses\nArea contains an additional Abyss",
+      "text": "Areas contain [ContainsAbyss|Abysses]\nArea contains an additional [ContainsAbyss|Abyss]",
       "generation_type": "unique",
       "tags": []
     },
@@ -781,7 +781,7 @@
     },
     {
       "groups": ["MapMonsterPhysicalReflection"],
-      "text": "Monsters reflect #% of Physical Damage",
+      "text": "Rare Monsters have [PhysicalThorns|Physical Thorns] reflecting # Physical Damage",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -941,7 +941,7 @@
     },
     {
       "groups": ["MapMonsterElementalReflection"],
-      "text": "Monsters reflect #% of Elemental Damage",
+      "text": "Rare Monsters have [ElementalThorns|Elemental Thorns] reflecting # Elemental Damage",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1093,7 +1093,7 @@
   "low_tier_map": [
     {
       "groups": ["MapMonsterPhysicalReflection"],
-      "text": "Monsters reflect #% of Physical Damage",
+      "text": "Rare Monsters have [PhysicalThorns|Physical Thorns] reflecting # Physical Damage",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1193,7 +1193,7 @@
     },
     {
       "groups": ["MapMonsterElementalReflection"],
-      "text": "Monsters reflect #% of Elemental Damage",
+      "text": "Rare Monsters have [ElementalThorns|Elemental Thorns] reflecting # Elemental Damage",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -1469,7 +1469,7 @@
         "MapMonsterPhysicalReflection",
         "MapMonsterElementalReflection"
       ],
-      "text": "Monsters reflect #% of Physical Damage\nMonsters reflect #% of Elemental Damage",
+      "text": "Rare Monsters have [PhysicalThorns|Physical Thorns] reflecting # Physical Damage\nRare Monsters have [ElementalThorns|Elemental Thorns] reflecting # Elemental Damage",
       "generation_type": "prefix",
       "tags": [
         "CURRENCY",
@@ -2049,7 +2049,7 @@
     },
     {
       "groups": ["MapMonsterElementalReflection"],
-      "text": "Monsters reflect #% of Elemental Damage",
+      "text": "Rare Monsters have [ElementalThorns|Elemental Thorns] reflecting # Elemental Damage",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
@@ -2279,7 +2279,7 @@
     },
     {
       "groups": ["MapMonsterPhysicalReflection"],
-      "text": "Monsters reflect #% of Physical Damage",
+      "text": "Rare Monsters have [PhysicalThorns|Physical Thorns] reflecting # Physical Damage",
       "generation_type": "prefix",
       "tags": [
         "QUANTITY",
